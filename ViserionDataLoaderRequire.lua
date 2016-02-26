@@ -1,0 +1,1 @@
+require('Viserion/dataLoaders/ViserionBinaryLoader')

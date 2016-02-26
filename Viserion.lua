@@ -40,7 +40,8 @@ if(opts.doTraining) then
 	mFile()
 else
 	print('Loading Model...')
-	model = torch.load(modelFile)
+	mFile = loadfile(opts.modelFile)
+	mFile()
 end
 
 --DEFINE CRITERION
@@ -95,6 +96,11 @@ if(opts.doTraining) then
 	end
 
 	print(lossAll)
+else
+	print('Just testing ' .. tostring(opts.startEpoch) .. '... ')
+	-- Test
+	local loss = trainer:test(epoch, testDataLoader, true)
+	saveTestState(epoch, loss, trainer.testOutput)
 end
 
 

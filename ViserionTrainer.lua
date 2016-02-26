@@ -94,6 +94,8 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
 	if saveTestOutput then
 		self.testOutput = torch.Tensor(dataloader:yDim())
+	else
+		self.testOutput = {}
 	end
 
 	--Switch Model to evaluation

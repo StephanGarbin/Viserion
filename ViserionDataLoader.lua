@@ -7,11 +7,11 @@ ViserionDataLoader = torch.class("ViserionDataLoader", X)
 
 
 function ViserionDataLoader:__init(options, Xs, Ys)
-	assert(Xs:size() == Ys:size())
+	assert(Xs:size()[1] == Ys:size()[1])
 	
 	self.Xs = Xs
 	self.Ys = Ys
-	self.__size = Xs:size()
+	self.__size = Xs:size()[1]
 	self.batchSize = options.batchSize
 	self.numThreads = options.numThreads
 
@@ -37,11 +37,11 @@ function ViserionDataLoader:size()
 end
 
 function ViserionDataLoader:xDim()
-	return self.Xs:dim()
+	return self.Xs:size()
 end
 
 function ViserionDataLoader:yDim()
-	return self.Ys:dim()
+	return self.Ys:size()
 end
 
 

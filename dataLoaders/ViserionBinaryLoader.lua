@@ -30,10 +30,6 @@ function ViserionBinaryLoader:__init(directory)
 end
 
 function ViserionBinaryLoader:size()
-	return self.__size
-end
-
-function ViserionBinaryLoader:dim()
 	return self.data:size()
 end
 

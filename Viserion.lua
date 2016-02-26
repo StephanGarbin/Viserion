@@ -12,12 +12,13 @@ cmd:option('-ioFile', '', 'Script specifing IO')
 cmd:option('-modelFile', '', 'Script defining model OR .t7 archive to load')
 cmd:option('-criterionFile', '', 'Script defining criterion to optimise')
 cmd:option('-optimFile', '', 'Script defining optimisation functions')  
-cmd:option('-doTraining', true, 'Training/Test switch')
+cmd:option('-doTraining', false, 'Training/Test switch')
 cmd:option('-batchSize', 1, 'Batch size')
 cmd:option('-numEpochs', 100, '#Epochs')
 cmd:option('-startEpoch', 0, 'Starting epoch for training')
 cmd:option('-numThreads', 1, '#Threads for data loading')
-cmd:option('-saveTestStateInterval', -1, 'Interval in which saveTestState IO function is called. Set to -1 to disable')
+cmd:option('-saveStateInterval', -1, 'Interval in which saveState function in your IO script is called. Set to -1 to disable')
+cmd:option('-passFullOutput2saveState', false, 'Set this to false so that full state output is not passed to the saveState function in your IO script.')
 cmd:option('-disableCUDNN', false, 'Use this to disable the CUDNN backend')
 
 opts = cmd:parse(arg)
@@ -35,14 +36,13 @@ dofile(opts.ioFile)
 
 --DEFINE MODEL
 if(opts.doTraining) then
-	print('Creating Model...')
-	mFile = loadfile(opts.modelFile)
-	mFile()
+	print('Creating Model...(NOTE: Your IO File should respect this!)')
 else
-	print('Loading Model...')
-	mFile = loadfile(opts.modelFile)
-	mFile()
+	print('Loading Model...(NOTE: Your IO File should respect this!)')
 end
+
+mFile = loadfile(opts.modelFile)
+	mFile()
 
 --DEFINE CRITERION
 print('Creating Criterion...')
@@ -68,10 +68,7 @@ oFile()
 --CREATE TRAINER
 local trainer = ViserionTrainer(model, criterion, optimOptimiser, optimConfig, defineCustomLearningRate, opts)
 
-print('Finished all preliminaries...')
-print('Starting training from epoch ' .. tostring(opts.startEpoch) .. '... ')
-
-
+print('Finished all preliminaries...\n')
 --TRAIN
 if(opts.doTraining) then
 	print('Starting training from epoch ' .. tostring(opts.startEpoch) .. '... ')
@@ -84,13 +81,13 @@ if(opts.doTraining) then
 		trainer:train(epoch, trainDataLoader)
 
 		-- Test
-		local loss = trainer:test(epoch, testDataLoader, true)
+		local loss = trainer:test(epoch, testDataLoader, opts.passFullOutput2saveState)
 
 		lossAll[epoch + 1] = loss
 
-		if(opts.saveTestStateInterval > 0) then
-			if(epoch % opts.saveTestStateInterval == 0 and epoch > 0) then
-				saveTestState(epoch, loss, trainer.testOutput)
+		if(opts.saveStateInterval > 0) then
+			if(epoch % opts.saveStateInterval == 0 and epoch > 0) then
+				saveState(epoch, loss, trainer.testOutput)
 			end
 		end
 	end
@@ -99,7 +96,7 @@ if(opts.doTraining) then
 else
 	print('Just testing ' .. tostring(opts.startEpoch) .. '... ')
 	-- Test
-	local loss = trainer:test(epoch, testDataLoader, true)
+	local loss = trainer:test(opts.startEpoch, testDataLoader, true)
 	saveTestState(epoch, loss, trainer.testOutput)
 end
 

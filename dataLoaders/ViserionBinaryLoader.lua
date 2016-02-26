@@ -19,10 +19,10 @@ function ViserionBinaryLoader:__init(directory)
 	end
 
 	table.sort(self.files, function (a,b) return a < b end)
-	
+
 	count = 0
 	for x in pairs(self.files) do count = count + 1 end
-	
+
 	self.numFiles = count
 	self.__size = 0
 
@@ -41,15 +41,15 @@ function ViserionBinaryLoader:getNarrowChunkNonContiguous(dim, idxList)
 	chunk = torch.Tensor(idxList:size()[1], self.data:size()[2], self.data:size()[3], self.data:size()[4])
 	for i = 1, idxList:size()[1] do
 		chunk[i] = self.data[idxList[i]]
-	end 
+	end
 	return chunk
 end
 
 function ViserionBinaryLoader:readArchives()
 	--determine size of total dataset first
-	
+
 	numSamples = 0
-	numChannels = 0	
+	numChannels = 0
 	height = 0
 	width = 0
 	for i, f in pairs(self.files) do
@@ -62,14 +62,14 @@ function ViserionBinaryLoader:readArchives()
 		height = currentFile:readInt()
 		--print('Tensor of size ' .. tostring(numBlocks) .. 'x' .. tostring(numChannels) .. 'x' .. tostring(width) .. 'x' .. tostring(height))
 		numSamples = numSamples + numBlocks
-		currentFile:close()				
-	end		
-	
-	print('Total # samples to read: ' .. tostring(numSamples)) 	
+		currentFile:close()
+	end
+
+	print('Total # samples to read: ' .. tostring(numSamples))
 
 	--now read dataset
 	self.data = torch.Tensor(numSamples, numChannels, height, width)
-	
+
 	collectgarbage()
 
 	currentSample = 1
@@ -81,8 +81,8 @@ function ViserionBinaryLoader:readArchives()
 		currentFile:readInt(3)
 
 		numFloatsPerBlock = numChannels * width * height;
-		
-		for i = 1, numBlocks do					
+
+		for i = 1, numBlocks do
 			self.data[{ currentSample,{},{},{} }] = torch.Tensor(currentFile:readFloat(numFloatsPerBlock))
 			currentSample = currentSample + 1
 		end
@@ -92,9 +92,9 @@ function ViserionBinaryLoader:readArchives()
 	end
 
 	print('Finished Reading...')
-		
+
 	self.__size = (#self.data)[1]
-	
+
 	self.width = width
 	self.height = height
 	self.numChannels = numChannels
@@ -103,5 +103,3 @@ function ViserionBinaryLoader:readArchives()
 end
 
 return X.ViserionBinaryLoader
-
-

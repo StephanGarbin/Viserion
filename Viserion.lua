@@ -91,7 +91,8 @@ if(opts.doTraining) then
 			end
 		end
 	end
-
+	
+	saveState(epoch, loss, trainer.testOutput)
 	print(lossAll)
 else
 	print('Just testing ' .. tostring(opts.startEpoch) .. '... ')

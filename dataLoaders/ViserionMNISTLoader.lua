@@ -5,11 +5,12 @@ local ViserionMNISTLoader = torch.class('ViserionMNISTLoader', X)
 function ViserionMNISTLoader:__init(filename)
 
 	f = torch.DiskFile(filename, 'r'):binary():bigEndianEncoding()
-  s = f:readInt(4)
-  n = s[2]
-  f:close()
+	s = f:readInt(4)
+	n = s[2]
 
-  self.data = torch.ByteTensor(f:readByte(n * 28 * 28)):view(torch.LongStorage{n, 1, 28, 28}):float() / 255
+	self.data = torch.ByteTensor(f:readByte(n * 28 * 28)):view(torch.LongStorage{n, 1, 28, 28}):float() / 255
+  	
+	f:close()
 
 end
 

@@ -124,7 +124,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
      	if saveTestOutput then
      		local tmp = self.model.output:float()
      		for i = 1, (#sample.target)[1] do
-     			self.testOutput[i] = tmp[i]
+     			self.testOutput[(n - 1) * self.opts.batchSize + i] = tmp[i]
      		end
      		collectgarbage()
      	end

@@ -91,14 +91,14 @@ if(opts.doTraining) then
 			end
 		end
 	end
-	
+
 	saveState(opts.numEpochs, loss, trainer.testOutput)
 	print(lossAll)
 else
 	print('Just testing ' .. tostring(opts.startEpoch) .. '... ')
 	-- Test
 	local loss = trainer:test(opts.startEpoch, testDataLoader, true)
-	saveTestState(epoch, loss, trainer.testOutput)
+	saveState(opts.startEpoch, loss, trainer.testOutput)
 end
 
 

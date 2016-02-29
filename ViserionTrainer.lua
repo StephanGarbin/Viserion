@@ -16,30 +16,30 @@ function ViserionTrainer:__init(model, criterion, optimOptimiser, optimOptions, 
 end
 
 function ViserionTrainer:train(epoch, dataloader)
-	--Scale learning rate if required	
+	--Scale learning rate if required
 	self.optimOptions.learningRate = defineCustomLearningRate(epoch, self.optimOptions.learningRate)
-	
+
 	--The evaluation function for the optimiser
 	local function feval()
 		return self.criterion.output, self.gradParams
-	end	
-	
+	end
+
 	--Time what we do
 	local modelTimer = torch.Timer()
 	local dataTimer = torch.Timer()
-	
+
 	local numBatches = math.ceil(dataloader:size() / self.opts.batchSize)
-	
+
 	--Store progression of loss, time to load data & to execute
 	local loss = torch.Tensor(numBatches)
 	local avgModelTime = 0
 	local avgDataTime = 0
-	
+
 	--Switch Model to training
 	self.model:training()
 
 	print('TRAIN: Processing Epoch # ' .. epoch .. ' (LR = ' .. tostring(self.optimOptions.learningRate) .. ')')
-	
+
 	--Process all batches
 	for n, sample in dataloader:run() do
 		avgDataTime = avgDataTime + dataTimer:time().real
@@ -48,30 +48,30 @@ function ViserionTrainer:train(epoch, dataloader)
 
 		--Copy input and target to the GPU
 		self:cudaDeviceCopy(sample)
-		
+
 		--Do forward pass
 		self.model:forward(self.input)
-		
+
 		--Compute loss
 		local local_loss = self.criterion:forward(self.model.output, self.target)
      		loss[n] = local_loss
 		--Erase prev gradient params
 		self.model:zeroGradParameters()
-		
+
 		--Do backward pass
 		self.criterion:backward(self.model.output, self.target)
 		self.model:backward(self.input, self.criterion.gradInput)
 
 		--Do Optim step
       	self.optimOptimiser(feval, self.params, self.optimOptions)
-		
+
 		--Save some debug info
 		avgModelTime = avgModelTime + modelTimer:time().real
 
 		modelTimer:reset()
 		dataTimer:reset()
 	end
-	
+
 	print('\n')
 	print('Loss = ' .. tostring(loss:mean()))
 	--print('Avg Model Time = ' .. tostring(avgModelTime / numBatches))
@@ -84,9 +84,9 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	--Time what we do
 	local modelTimer = torch.Timer()
 	local dataTimer = torch.Timer()
-	
+
 	local numBatches = math.ceil(dataloader:size() / self.opts.batchSize)
-	
+
 	--Store progression of loss, time to load data & to execute
 	local loss = torch.Tensor(numBatches)
 	local avgModelTime = 0
@@ -102,7 +102,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	self.model:evaluate()
 
 	print('TEST: Processing Epoch # ' .. epoch)
-	
+
 	--Process all batches
 	for n, sample in dataloader:runNoShuffle() do
 
@@ -112,10 +112,10 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
 		--Copy input and target to the GPU
 		self:cudaDeviceCopy(sample)
-		
+
 		--Do forward pass
 		self.model:forward(self.input)
-		
+
 		--Compute loss
 		local local_loss = self.criterion:forward(self.model.output, self.target)
      		loss[n] = local_loss
@@ -128,7 +128,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
      		end
      		collectgarbage()
      	end
-		
+
 		--Save some debug info
 		avgModelTime = avgModelTime + modelTimer:time().real
 		avgDataTime = avgDataTime + dataTimer:time().real
@@ -136,7 +136,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 		modelTimer:reset()
 		dataTimer:reset()
 	end
-	
+
 	print('\n')
 	print('Loss = ' .. tostring(loss:mean()))
 	--print('Avg Model Time = ' .. tostring(avgModelTime / numBatches))
@@ -160,9 +160,3 @@ end
 
 
 return X.ViserionTrainer
-
-
-
-
-
-

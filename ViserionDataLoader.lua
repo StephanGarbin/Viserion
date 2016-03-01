@@ -70,6 +70,7 @@ function ViserionDataLoader:run()
 					local sample_ = {}
 					sample_.input = _G.x:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize))
 					sample_.target = _G.y:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize))
+					print(1 + batchSize * batchNum, bSize)
 					
 					return sample_
 				end,
@@ -129,6 +130,7 @@ function ViserionDataLoader:runNoShuffle()
 					local sample_ = {}
 					sample_.input = _G.x:getNarrowChunk(1, 1 + batchSize * batchNum, bSize)
 					sample_.target = _G.y:getNarrowChunk(1, 1 + batchSize * batchNum, bSize)
+					print(1 + batchSize * batchNum, bSize)
 					
 					return sample_
 				end,

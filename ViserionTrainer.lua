@@ -106,7 +106,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	--Process all batches
 	for n, sample in dataloader:runNoShuffle() do
 
-		xlua.progress(n, numBatches)
+		--xlua.progress(n, numBatches)
 
 		local dataTime = dataTimer:time().real
 

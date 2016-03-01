@@ -91,6 +91,7 @@ function ViserionStereoHDF5Loader:getNarrowChunkNonContiguous(dim, idxList)
 		local chunk_index = self.indices[idxList[i]]
 		chunk[i] = self.sequences[chunk_index[1]][{{chunk_index[2], chunk_index[3]}, {}, {}, {}}]:float()
 	end
+	collectgarbage(); collectgarbage();
 	return chunk / 255
 end
 

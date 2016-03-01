@@ -11,7 +11,7 @@ cmd:text('Options')
 cmd:option('-ioFile', '', 'Script specifing IO')
 cmd:option('-modelFile', '', 'Script defining model OR .t7 archive to load')
 cmd:option('-criterionFile', '', 'Script defining criterion to optimise')
-cmd:option('-optimFile', '', 'Script defining optimisation functions')  
+cmd:option('-optimFile', '', 'Script defining optimisation functions')
 cmd:option('-doTraining', false, 'Training/Test switch')
 cmd:option('-batchSize', 1, 'Batch size')
 cmd:option('-numEpochs', 100, '#Epochs')
@@ -100,6 +100,3 @@ else
 	local loss = trainer:test(opts.startEpoch, testDataLoader, true)
 	saveState(opts.startEpoch, loss, trainer.testOutput)
 end
-
-
-

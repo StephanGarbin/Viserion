@@ -14,21 +14,6 @@ function ViserionDataLoader:__init(options, Xs, Ys)
 	self.__size = Xs:size()[1]
 	self.batchSize = options.batchSize
 	self.numThreads = options.numThreads
-
-	--Create the parallel thread pool
-	self.pool = threads.Threads(self.numThreads,
-		function(idx)
-			--We need to declare required files here,
-			--otherwise serialisation will make this fail
-			requireF = loadfile('Viserion/ViserionDataLoaderRequire.lua')
-			requireF()
-		end,
-		function(idx)
-			print('Spawing IO Thread...')
-			_G.x = Xs
-			_G.y = Ys
-		end
-		)
 end
 
 
@@ -36,17 +21,34 @@ function ViserionDataLoader:size()
 	return self.__size
 end
 
-function ViserionDataLoader:xDim()
+function ViserionDataLoader:xSize()
 	return self.Xs:size()
 end
 
-function ViserionDataLoader:yDim()
+function ViserionDataLoader:ySize()
 	return self.Ys:size()
 end
 
 
 function ViserionDataLoader:run()
-	
+	local Xs = self.Xs
+	local Ys = self.Ys
+	--Create the parallel thread pool
+	 local pool = threads.Threads(self.numThreads,
+		function(idx)
+			--We need to declare required files here,
+			--otherwise serialisation will make this fail
+			requireF = loadfile('Viserion/ViserionDataLoaderRequire.lua')
+			requireF()
+			return idx
+		end,
+		function(idx)
+			--print('Spawing IO Thread...', idx)
+			_G.x = Xs
+			_G.y = Ys
+		end
+		)
+
 	local perm = torch.randperm(self.__size)
 	
 	numEnqueuedBatches = 0
@@ -55,8 +57,8 @@ function ViserionDataLoader:run()
 	local sample
 
 	local function createJobs()
-		while numEnqueuedBatches < numBatches and self.pool:acceptsjob() do
-			self.pool:addjob(
+		while numEnqueuedBatches < numBatches and pool:acceptsjob() do
+			pool:addjob(
 				function(batchSize, batchNum, totalSize, perm)
 
 					--1. Determine batch size
@@ -70,7 +72,6 @@ function ViserionDataLoader:run()
 					local sample_ = {}
 					sample_.input = _G.x:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize))
 					sample_.target = _G.y:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize))
-					print(1 + batchSize * batchNum, bSize)
 					
 					return sample_
 				end,
@@ -88,15 +89,15 @@ function ViserionDataLoader:run()
 	local function loop()
 		createJobs()
 
-		if not self.pool:hasjob() then
+		if not pool:hasjob() then
         	return nil
       	end
-		self.pool:dojob()
+		pool:dojob()
 
 		--Check for errors
-		if self.pool:haserror() then
+		if pool:haserror() then
 			print('ERROR: Thread Pool of DataLoader Class has encountered a critical error...')
-			self.pool:synchronize()
+			pool:synchronize()
 		end
 
 		currentBatch = currentBatch + 1
@@ -109,14 +110,33 @@ end
 
 
 function ViserionDataLoader:runNoShuffle()
+	local Xs = self.Xs
+	local Ys = self.Ys
+	--Create the parallel thread pool
+	local pool = threads.Threads(self.numThreads,
+		function(idx)
+			--We need to declare required files here,
+			--otherwise serialisation will make this fail
+			requireF = loadfile('Viserion/ViserionDataLoaderRequire.lua')
+			requireF()
+
+			return idx
+		end,
+		function(idx)
+			--print('Spawing IO Thread...', idx)
+			_G.x = Xs
+			_G.y = Ys
+		end
+		)
+
 	numEnqueuedBatches = 0
 	numBatches = math.ceil(self.__size / self.batchSize)
 
 	local sample
 
 	local function createJobs()
-		while numEnqueuedBatches < numBatches and self.pool:acceptsjob() do
-			self.pool:addjob(
+		while numEnqueuedBatches < numBatches and pool:acceptsjob() do
+			pool:addjob(
 				function(batchSize, batchNum, totalSize)
 
 					--1. Determine batch size
@@ -130,7 +150,6 @@ function ViserionDataLoader:runNoShuffle()
 					local sample_ = {}
 					sample_.input = _G.x:getNarrowChunk(1, 1 + batchSize * batchNum, bSize)
 					sample_.target = _G.y:getNarrowChunk(1, 1 + batchSize * batchNum, bSize)
-					print(1 + batchSize * batchNum, bSize)
 					
 					return sample_
 				end,
@@ -148,15 +167,15 @@ function ViserionDataLoader:runNoShuffle()
 	local function loop()
 		createJobs()
 
-		if not self.pool:hasjob() then
+		if not pool:hasjob() then
         	return nil
       	end
-		self.pool:dojob()
+		pool:dojob()
 
 		--Check for errors
-		if self.pool:haserror() then
+		if pool:haserror() then
 			print('ERROR: Thread Pool of DataLoader Class has encountered a critical error...')
-			self.pool:synchronize()
+			pool:synchronize()
 		end
 
 		currentBatch = currentBatch + 1

@@ -34,10 +34,12 @@ function ViserionBinaryLoader:size()
 end
 
 function ViserionBinaryLoader:getNarrowChunk(dim, index, size)
+	--print('Test', index, size)
 	return self.data:narrow(dim, index, size)
 end
 
 function ViserionBinaryLoader:getNarrowChunkNonContiguous(dim, idxList)
+	--print('Train', idxList[1])
 	chunk = torch.Tensor(idxList:size()[1], self.data:size()[2], self.data:size()[3], self.data:size()[4])
 	for i = 1, idxList:size()[1] do
 		chunk[i] = self.data[idxList[i]]

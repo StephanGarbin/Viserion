@@ -70,6 +70,7 @@ function ViserionTrainer:train(epoch, dataloader)
 
 		modelTimer:reset()
 		dataTimer:reset()
+		collectgarbage()
 	end
 	
 	print('\n')
@@ -93,7 +94,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	local avgDataTime = 0
 
 	if saveTestOutput then
-		self.testOutput = torch.Tensor(dataloader:yDim())
+		self.testOutput = torch.Tensor(dataloader:ySize())
 	else
 		self.testOutput = {}
 	end
@@ -106,7 +107,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	--Process all batches
 	for n, sample in dataloader:runNoShuffle() do
 
-		--xlua.progress(n, numBatches)
+		xlua.progress(n, numBatches)
 
 		local dataTime = dataTimer:time().real
 
@@ -135,6 +136,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
 		modelTimer:reset()
 		dataTimer:reset()
+		collectgarbage()
 	end
 	
 	print('\n')

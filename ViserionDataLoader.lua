@@ -55,6 +55,7 @@ function ViserionDataLoader:run()
 	numBatches = math.ceil(self.__size / self.batchSize)
 
 	local sample
+	local currentBatch
 
 	local function createJobs()
 		while numEnqueuedBatches < numBatches and pool:acceptsjob() do
@@ -73,18 +74,17 @@ function ViserionDataLoader:run()
 					sample_.input = _G.x:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize))
 					sample_.target = _G.y:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize))
 					
-					return sample_
+					return batchNum, sample_
 				end,
-				function(sample_)
+				function(batchNum, sample_)
 					sample = sample_
+					currentBatch = batchNum + 1
 				end,
 				self.batchSize, numEnqueuedBatches, self:size(), perm)
 
 			numEnqueuedBatches = numEnqueuedBatches + 1
 		end
 	end
-
-	local currentBatch = 0
 
 	local function loop()
 		createJobs()
@@ -99,8 +99,6 @@ function ViserionDataLoader:run()
 			print('ERROR: Thread Pool of DataLoader Class has encountered a critical error...')
 			pool:synchronize()
 		end
-
-		currentBatch = currentBatch + 1
 
 		return currentBatch, sample
 	end
@@ -132,6 +130,8 @@ function ViserionDataLoader:runNoShuffle()
 	numEnqueuedBatches = 0
 	numBatches = math.ceil(self.__size / self.batchSize)
 
+	local currentBatch = 0
+
 	local sample
 
 	local function createJobs()
@@ -151,18 +151,17 @@ function ViserionDataLoader:runNoShuffle()
 					sample_.input = _G.x:getNarrowChunk(1, 1 + batchSize * batchNum, bSize)
 					sample_.target = _G.y:getNarrowChunk(1, 1 + batchSize * batchNum, bSize)
 					
-					return sample_
+					return batchNum, sample_
 				end,
-				function(sample_)
+				function(batchNum, sample_)
 					sample = sample_
+					currentBatch = batchNum + 1
 				end,
 				self.batchSize, numEnqueuedBatches, self:size())
 
 			numEnqueuedBatches = numEnqueuedBatches + 1
 		end
 	end
-
-	local currentBatch = 0
 
 	local function loop()
 		createJobs()
@@ -177,8 +176,6 @@ function ViserionDataLoader:runNoShuffle()
 			print('ERROR: Thread Pool of DataLoader Class has encountered a critical error...')
 			pool:synchronize()
 		end
-
-		currentBatch = currentBatch + 1
 
 		return currentBatch, sample
 	end

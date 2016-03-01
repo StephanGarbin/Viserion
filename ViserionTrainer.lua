@@ -40,11 +40,12 @@ function ViserionTrainer:train(epoch, dataloader)
 
 	print('TRAIN: Processing Epoch # ' .. epoch .. ' (LR = ' .. tostring(self.optimOptions.learningRate) .. ')')
 
+	ProgressBarStep = 1
 	--Process all batches
 	for n, sample in dataloader:run() do
 		avgDataTime = avgDataTime + dataTimer:time().real
 
-		xlua.progress(n, numBatches)
+		xlua.progress(ProgressBarStep, numBatches)
 
 		--Copy input and target to the GPU
 		self:cudaDeviceCopy(sample)
@@ -70,6 +71,7 @@ function ViserionTrainer:train(epoch, dataloader)
 
 		modelTimer:reset()
 		dataTimer:reset()
+		ProgressBarStep = ProgressBarStep + 1
 		collectgarbage()
 	end
 
@@ -104,10 +106,11 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
 	print('TEST: Processing Epoch # ' .. epoch)
 
+	ProgressBarStep = 1
 	--Process all batches
 	for n, sample in dataloader:runNoShuffle() do
 
-		xlua.progress(n, numBatches)
+		xlua.progress(ProgressBarStep, numBatches)
 
 		local dataTime = dataTimer:time().real
 
@@ -136,6 +139,9 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
 		modelTimer:reset()
 		dataTimer:reset()
+
+		ProgressBarStep = ProgressBarStep + 1
+		
 		collectgarbage()
 	end
 

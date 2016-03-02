@@ -21,7 +21,7 @@ cmd:option('-saveStateInterval', -1, 'Interval in which saveState function in yo
 cmd:option('-passFullOutput2saveState', false, 'Set this to false so that full state output is not passed to the saveState function in your IO script.')
 cmd:option('-disableCUDNN', false, 'Use this to disable the CUDNN backend')
 cmd:option('-cudnnVerbose', false, 'Enable verbose output for CUDNN debug')
-cmd:option('-specifyGPUS', 1, 'Specify which GPUS on the system to use, for example, to use 3 and 4, use 34')
+cmd:option('-specifyGPUs', 1, 'Specify which GPUS on the system to use, for example, to use 3 and 4, use 34')
 
 opts = cmd:parse(arg)
 
@@ -62,7 +62,7 @@ local function separateDigits(x)
 	return counter, components
 end
 
-opts.numGPUs, opts.gpuIDXs = separateDigits(opts.specifyGPUS)
+opts.numGPUs, opts.gpuIDXs = separateDigits(opts.specifyGPUs)
 
 if opts.numGPUs > 1 then
 	print('Using GPUs: ', opts.gpuIDXs)

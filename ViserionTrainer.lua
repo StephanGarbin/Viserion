@@ -55,7 +55,8 @@ function ViserionTrainer:train(epoch, dataloader)
 
 		--Compute loss
 		local local_loss = self.criterion:forward(self.model.output, self.target)
-     		loss[n] = local_loss
+     	loss[n] = local_loss
+		
 		--Erase prev gradient params
 		self.model:zeroGradParameters()
 

@@ -29,6 +29,7 @@ torch.setdefaulttensortype('torch.FloatTensor')
 
 cudnn.benchmark = true
 cudnn.fastest = true
+cudnn.verbose = true
 
 --DATA HANDLING
 print('Loading Data...')
@@ -47,8 +48,9 @@ dofile(opts.modelFile)
 
 --DEFINE CRITERION
 print('Creating Criterion...')
-cFile = loadfile(opts.criterionFile)
-cFile()
+--cFile = loadfile(opts.criterionFile)
+--cFile()
+dofile(opts.criterionFile)
 
 --ENABLE GPU SUPPORT
 print('Converting Criterion to CUDA...')
@@ -58,6 +60,7 @@ model:cuda()
 if not opts.disableCUDNN then
 	print('Converting Model to CUDNN...')
 	cudnn.convert(model, cudnn)
+	cudnn.convert(criterion, cudnn)
 end
 print(model)
 

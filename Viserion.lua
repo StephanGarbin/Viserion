@@ -20,6 +20,7 @@ cmd:option('-numThreads', 1, '#Threads for data loading')
 cmd:option('-saveStateInterval', -1, 'Interval in which saveState function in your IO script is called. Set to -1 to disable')
 cmd:option('-passFullOutput2saveState', false, 'Set this to false so that full state output is not passed to the saveState function in your IO script.')
 cmd:option('-disableCUDNN', false, 'Use this to disable the CUDNN backend')
+cmd:option('-cudnnVerbose', false, 'Enable verbose output for CUDNN debug')
 
 opts = cmd:parse(arg)
 
@@ -29,7 +30,9 @@ torch.setdefaulttensortype('torch.FloatTensor')
 
 cudnn.benchmark = true
 cudnn.fastest = true
-cudnn.verbose = true
+if opts.cudnnVerbose then
+	cudnn.verbose = true
+end
 
 --DATA HANDLING
 print('Loading Data...')

@@ -50,9 +50,11 @@ function ViserionTrainer:train(epoch, dataloader)
 		--Copy input and target to the GPU
 		self:cudaDeviceCopy(sample)
 
+		--print('model forward')
 		--Do forward pass
 		self.model:forward(self.input)
 
+		--print('criterion loss')
 		--Compute loss
 		local local_loss = self.criterion:forward(self.model.output, self.target)
      	loss[n] = local_loss
@@ -60,6 +62,7 @@ function ViserionTrainer:train(epoch, dataloader)
 		--Erase prev gradient params
 		self.model:zeroGradParameters()
 
+		--print('criterion back')
 		--Do backward pass
 		self.criterion:backward(self.model.output, self.target)
 		self.model:backward(self.input, self.criterion.gradInput)
@@ -129,7 +132,6 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
      		for i = 1, (#sample.target)[1] do
      			self.testOutput[(n - 1) * self.opts.batchSize + i] = tmp[i]
      		end
-     		collectgarbage()
      	end
 
 		--Save some debug info

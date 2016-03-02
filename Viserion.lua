@@ -21,6 +21,7 @@ cmd:option('-saveStateInterval', -1, 'Interval in which saveState function in yo
 cmd:option('-passFullOutput2saveState', false, 'Set this to false so that full state output is not passed to the saveState function in your IO script.')
 cmd:option('-disableCUDNN', false, 'Use this to disable the CUDNN backend')
 cmd:option('-cudnnVerbose', false, 'Enable verbose output for CUDNN debug')
+cmd:option('-specifyGPUS', 1, 'Specify which GPUS on the system to use, for example, to use 3 and 4, use 34')
 
 opts = cmd:parse(arg)
 
@@ -48,6 +49,27 @@ end
 --mFile = loadfile(opts.modelFile)
 --mFile()
 dofile(opts.modelFile)
+
+--Create DPT if multi-gpu use is enabled
+local function separateDigits(x)
+	components = {}
+	counter = 0
+	while x > 0 do
+		table.insert(components, x%10)
+		x = math.floor(x / 10)
+		counter = counter + 1
+	end
+	return counter, components
+end
+
+opts.numGPUs, opts.gpuIDXs = separateDigits(opts.specifyGPUS)
+
+if opts.numGPUs > 1 then
+	print('Using GPUs: ', opts.gpuIDXs)
+else
+	cutorch.setDevice(opts.gpuIDXs[1])
+	print('Using GPU: ', opts.gpuIDXs[1])
+end
 
 --DEFINE CRITERION
 print('Creating Criterion...')

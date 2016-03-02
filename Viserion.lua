@@ -81,8 +81,6 @@ if(opts.doTraining) then
 		-- Train
 		trainer:train(epoch, trainDataLoader)
 
-		print('Testing...')
-
 		-- Test
 		local loss = trainer:test(epoch, testDataLoader, opts.passFullOutput2saveState)
 
@@ -93,8 +91,6 @@ if(opts.doTraining) then
 				saveState(epoch, loss, trainer.testOutput)
 			end
 		end
-
-		collectgarbage()
 	end
 
 	saveState(opts.numEpochs, loss, trainer.testOutput)

@@ -112,6 +112,7 @@ function ViserionDataLoader:runNoShuffle()
 	local Xs = self.Xs
 	local Ys = self.Ys
 	--Create the parallel thread pool
+	--print('Num Threads: ', self.numThreads)
 	local pool = threads.Threads(self.numThreads,
 		function(idx)
 			--We need to declare required files here,

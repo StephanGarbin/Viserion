@@ -66,6 +66,9 @@ opts.numGPUs, opts.gpuIDXs = separateDigits(opts.specifyGPUS)
 
 if opts.numGPUs > 1 then
 	print('Using GPUs: ', opts.gpuIDXs)
+
+	model = nn.DataParallelTable(1, true, true):add(model, opts.gpuIDXs)
+	model.gradInput = nil
 else
 	cutorch.setDevice(opts.gpuIDXs[1])
 	print('Using GPU: ', opts.gpuIDXs[1])

@@ -72,7 +72,6 @@ function ViserionTrainer:train(epoch, dataloader)
 		modelTimer:reset()
 		dataTimer:reset()
 		ProgressBarStep = ProgressBarStep + 1
-		collectgarbage()
 	end
 
 	print('\n')
@@ -80,7 +79,6 @@ function ViserionTrainer:train(epoch, dataloader)
 	--print('Avg Model Time = ' .. tostring(avgModelTime / numBatches))
 	--print('Avg Data Time = ' .. tostring(avgDataTime / numBatches))
 	print('\n')
-	collectgarbage()
 end
 
 function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
@@ -126,11 +124,9 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
      	--Save data if required
      	if saveTestOutput then
-     		local tmp = self.model.output:float()
      		for i = 1, (#sample.target)[1] do
-     			self.testOutput[(n - 1) * self.opts.batchSize + i] = tmp[i]
+     			self.testOutput[(n - 1) * self.opts.batchSize + i] = self.model.output:float()[i]
      		end
-     		collectgarbage()
      	end
 
 		--Save some debug info
@@ -141,8 +137,6 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 		dataTimer:reset()
 
 		ProgressBarStep = ProgressBarStep + 1
-		
-		collectgarbage()
 	end
 
 	print('\n')
@@ -152,8 +146,6 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	print('----------------------------------------------------------------------------------------------');
 	print('----------------------------------------------------------------------------------------------');
 	print('\n\n')
-
-	collectgarbage()
 
 	return loss:mean()
 end

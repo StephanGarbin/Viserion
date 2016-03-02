@@ -90,6 +90,7 @@ function ViserionDataLoader:run()
 		createJobs()
 
 		if not pool:hasjob() then
+			pool:synchronize()
         	return nil
       	end
 		pool:dojob()

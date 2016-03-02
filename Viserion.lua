@@ -41,8 +41,9 @@ else
 	print('Loading Model...(NOTE: Your IO File should respect this!)')
 end
 
-mFile = loadfile(opts.modelFile)
-	mFile()
+--mFile = loadfile(opts.modelFile)
+--mFile()
+dofile(opts.modelFile)
 
 --DEFINE CRITERION
 print('Creating Criterion...')
@@ -80,6 +81,8 @@ if(opts.doTraining) then
 		-- Train
 		trainer:train(epoch, trainDataLoader)
 
+		print('Testing...')
+
 		-- Test
 		local loss = trainer:test(epoch, testDataLoader, opts.passFullOutput2saveState)
 
@@ -90,6 +93,8 @@ if(opts.doTraining) then
 				saveState(epoch, loss, trainer.testOutput)
 			end
 		end
+
+		collectgarbage()
 	end
 
 	saveState(opts.numEpochs, loss, trainer.testOutput)

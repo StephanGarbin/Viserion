@@ -156,7 +156,11 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 end
 
 function ViserionTrainer:cudaDeviceCopy(sample)
-	self.input = torch.CudaTensor()
+	if self.opts.numGPUs > 1 then
+		self.input = cutorch.createCudaHostTensor()
+	else
+		self.input = torch.CudaTensor()
+	end
 	self.target = torch.CudaTensor()
 
 	self.input:resize(sample.input:size()):copy(sample.input)

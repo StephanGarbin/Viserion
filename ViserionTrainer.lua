@@ -58,7 +58,7 @@ function ViserionTrainer:train(epoch, dataloader)
 		--Compute loss
 		local local_loss = self.criterion:forward(self.model.output, self.target)
      	loss[n] = local_loss
-		
+
 		--Erase prev gradient params
 		self.model:zeroGradParameters()
 
@@ -83,6 +83,7 @@ function ViserionTrainer:train(epoch, dataloader)
 	--print('Avg Model Time = ' .. tostring(avgModelTime / numBatches))
 	--print('Avg Data Time = ' .. tostring(avgDataTime / numBatches))
 	print('\n')
+	return loss:mean()
 end
 
 function ViserionTrainer:test(epoch, dataloader, saveTestOutput)

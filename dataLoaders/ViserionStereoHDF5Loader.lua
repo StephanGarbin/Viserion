@@ -70,8 +70,7 @@ function ViserionStereoHDF5Loader:__init(filename, side, nb_sequences, nb_ips, d
 	self.data_size[3] = self.height
 	self.data_size[4] = self.width
 
-	print('loading of ' .. side .. ' done. ' .. 'total_size: ' .. self.total_size)
-	print(self.data_size)
+	print('loading of ' .. side .. ' done. size: ' .. self.data_size[1] .. "x" .. self.data_size[2] .. "x" .. self.data_size[3] .. "x" .. self.data_size[4])
 
 	collectgarbage(); collectgarbage();
 
@@ -91,7 +90,7 @@ function ViserionStereoHDF5Loader:getNarrowChunkNonContiguous(dim, idxList)
 		local chunk_index = self.indices[idxList[i]]
 		chunk[i] = self.sequences[chunk_index[1]][{{chunk_index[2], chunk_index[3]}, {}, {}, {}}]:float()
 	end
-	collectgarbage(); collectgarbage();
+	collectgarbage();
 	return chunk / 255
 end
 

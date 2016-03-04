@@ -20,9 +20,9 @@ function ViserionTrainer:train(epoch, dataloader)
 	self.optimOptions.learningRate = defineCustomLearningRate(epoch, self.optimOptions.learningRate)
 
 	--update learning rate across devices if the model is a DPT
-	if self.opts.numGPUs > 1 then
-		self.model:updateParameters(self.optimOptions.learningRate)
-	end
+	--if self.opts.numGPUs > 1 then
+	--	self.model:updateParameters(self.optimOptions.learningRate)
+	--end
 
 	--The evaluation function for the optimiser
 	local function feval()
@@ -58,14 +58,12 @@ function ViserionTrainer:train(epoch, dataloader)
 		--print('model forward')
 		--Do forward pass
 		self.model:forward(self.input)
-
-		--print('criterion loss')
+		
+		self.model:zeroGradParameters()
 		--Compute loss
 		local local_loss = self.criterion:forward(self.model.output, self.target)
-     	loss[n] = local_loss
-		
-		--Erase prev gradient params
-		self.model:zeroGradParameters()
+     		--print('Local loss')
+		loss[n] = local_loss
 
 		--print('criterion back')
 		--Do backward pass
@@ -165,11 +163,15 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 end
 
 function ViserionTrainer:cudaDeviceCopy(sample)
+	cutorch.setDevice(self.opts.gpuIDXs[1])
 	if self.opts.numGPUs > 1 then
 		self.input = cutorch.createCudaHostTensor()
+		--self.target = cutorch.createCudaHostTensor()
 	else
 		self.input = torch.CudaTensor()
+		--self.target = torch.CudaTensor()
 	end
+
 	self.target = torch.CudaTensor()
 
 	self.input:resize(sample.input:size()):copy(sample.input)

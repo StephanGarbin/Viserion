@@ -31,6 +31,7 @@ torch.setdefaulttensortype('torch.FloatTensor')
 
 cudnn.benchmark = true
 cudnn.fastest = true
+print('Using cudnn version: ', cudnn.version)
 if opts.cudnnVerbose then
 	cudnn.verbose = true
 end
@@ -66,9 +67,19 @@ opts.numGPUs, opts.gpuIDXs = separateDigits(opts.specifyGPUs)
 
 if opts.numGPUs > 1 then
 	print('Using GPUs: ', opts.gpuIDXs)
-
+	--enable flattenParams and NCLL,... splitting the minibatch!
 	model = nn.DataParallelTable(1, true, true):add(model, opts.gpuIDXs)
-	model.gradInput = nil
+
+	--enable asyncronous kernel launches
+	model:threads(function()
+  		require 'cudnn'
+  		cudnn.benchmark = true
+		cudnn.fastest = true
+
+		if opts.cudnnVerbose then
+			cudnn.verbose = true
+		end
+	end)
 else
 	cutorch.setDevice(opts.gpuIDXs[1])
 	print('Using GPU: ', opts.gpuIDXs[1])
@@ -94,8 +105,7 @@ print(model)
 
 --DEFINE OPTIMISATION
 print('Defining Optimisation Parameters...')
-oFile = loadfile(opts.optimFile)
-oFile()
+dofile(opts.optimFile)
 
 --CREATE TRAINER
 local trainer = ViserionTrainer(model, criterion, optimOptimiser, optimConfig, defineCustomLearningRate, opts)
@@ -105,17 +115,13 @@ print('Finished all preliminaries...\n')
 if(opts.doTraining) then
 	print('Starting training from epoch ' .. tostring(opts.startEpoch) .. '... ')
 
-	lossAll = torch.Tensor(opts.numEpochs)
-
 	for epoch = opts.startEpoch, opts.numEpochs do
 
 		-- Train
 		trainer:train(epoch, trainDataLoader)
 
 		-- Test
-		local loss = trainer:test(epoch, testDataLoader, opts.passFullOutput2saveState)
-
-		lossAll[epoch + 1] = loss
+		trainer:test(epoch, testDataLoader, opts.passFullOutput2saveState)
 
 		if(opts.saveStateInterval > 0) then
 			if(epoch % opts.saveStateInterval == 0 and epoch > 0) then

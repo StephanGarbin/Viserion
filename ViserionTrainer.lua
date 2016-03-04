@@ -19,6 +19,11 @@ function ViserionTrainer:train(epoch, dataloader)
 	--Scale learning rate if required
 	self.optimOptions.learningRate = defineCustomLearningRate(epoch, self.optimOptions.learningRate)
 
+	--update learning rate across devices if the model is a DPT
+	if self.opts.numGPUs > 1 then
+		self.model:updateParameters(self.optimOptions.learningRate)
+	end
+
 	--The evaluation function for the optimiser
 	local function feval()
 		return self.criterion.output, self.gradParams
@@ -69,6 +74,11 @@ function ViserionTrainer:train(epoch, dataloader)
 
 		--Do Optim step
       	self.optimOptimiser(feval, self.params, self.optimOptions)
+
+      	--https://github.com/soumith/cunnsparse/blob/master/doc/cunnmodules.md
+      	if self.opts.numGPUs > 1 then
+      		self.model:syncParameters()
+      	end
 
 		--Save some debug info
 		avgModelTime = avgModelTime + modelTimer:time().real
@@ -124,7 +134,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
 		--Compute loss
 		local local_loss = self.criterion:forward(self.model.output, self.target)
-     		loss[n] = local_loss
+     	loss[n] = local_loss
 
      	--Save data if required
      	if saveTestOutput then
@@ -132,6 +142,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
      		for i = 1, (#sample.target)[1] do
      			self.testOutput[(n - 1) * self.opts.batchSize + i] = tmp[i]
      		end
+     		--collectgarbage()
      	end
 
 		--Save some debug info
@@ -151,8 +162,6 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	print('----------------------------------------------------------------------------------------------');
 	print('----------------------------------------------------------------------------------------------');
 	print('\n\n')
-
-	return loss:mean()
 end
 
 function ViserionTrainer:cudaDeviceCopy(sample)

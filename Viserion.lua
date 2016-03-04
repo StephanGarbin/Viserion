@@ -69,14 +69,15 @@ if opts.numGPUs > 1 then
 	print('Using GPUs: ', opts.gpuIDXs)
 	--enable flattenParams and NCLL,... splitting the minibatch!
 	model = nn.DataParallelTable(1, true, true):add(model, opts.gpuIDXs)
-
+	--potentially disable ncll
 	--enable asyncronous kernel launches
+	local options = opts
 	model:threads(function()
   		require 'cudnn'
   		cudnn.benchmark = true
 		cudnn.fastest = true
 
-		if opts.cudnnVerbose then
+		if options.cudnnVerbose then
 			cudnn.verbose = true
 		end
 	end)

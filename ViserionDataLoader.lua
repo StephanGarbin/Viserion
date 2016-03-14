@@ -12,8 +12,11 @@ function ViserionDataLoader:__init(options, Xs, Ys)
 	self.Xs = Xs
 	self.Ys = Ys
 	self.__size = Xs:size()[1]
+	--shorthand as these are used all the time
 	self.batchSize = options.batchSize
 	self.numThreads = options.numThreads
+	--but save all options
+	self.opts = options
 end
 
 
@@ -33,6 +36,7 @@ end
 function ViserionDataLoader:run()
 	local Xs = self.Xs
 	local Ys = self.Ys
+	local options = self.opts
 	--Create the parallel thread pool
 	 local pool = threads.Threads(self.numThreads,
 		function(idx)
@@ -46,6 +50,7 @@ function ViserionDataLoader:run()
 			--print('Spawing IO Thread...', idx)
 			_G.x = Xs
 			_G.y = Ys
+			_G.opts = options
 		end
 		)
 
@@ -68,6 +73,10 @@ function ViserionDataLoader:run()
 						bSize = batchSize - ((batchNum * batchSize + batchSize) - totalSize)
 					else
 						bSize = batchSize
+					end
+
+					if _G.opts.debug then
+						print('DEBUG: Getting Data, calling getNarrowChunkNonContiguous() on your dataloader')
 					end
 
 					local sample_ = {}
@@ -111,6 +120,7 @@ end
 function ViserionDataLoader:runNoShuffle()
 	local Xs = self.Xs
 	local Ys = self.Ys
+	local options = self.opts
 	--Create the parallel thread pool
 	--print('Num Threads: ', self.numThreads)
 	local pool = threads.Threads(self.numThreads,
@@ -126,6 +136,7 @@ function ViserionDataLoader:runNoShuffle()
 			--print('Spawing IO Thread...', idx)
 			_G.x = Xs
 			_G.y = Ys
+			_G.opts = options
 		end
 		)
 
@@ -149,6 +160,9 @@ function ViserionDataLoader:runNoShuffle()
 						bSize = batchSize
 					end
 
+					if _G.opts.debug then
+						print('DEBUG: Getting Data, calling getNarrowChunk() on your dataloader')
+					end
 					local sample_ = {}
 					sample_.input = _G.x:getNarrowChunk(1, 1 + batchSize * batchNum, bSize)
 					sample_.target = _G.y:getNarrowChunk(1, 1 + batchSize * batchNum, bSize)

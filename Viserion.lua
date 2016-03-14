@@ -23,7 +23,7 @@ cmd:option('-disableCUDNN', false, 'Use this to disable the CUDNN backend')
 cmd:option('-cudnnVerbose', false, 'Enable verbose output for CUDNN debug')
 cmd:option('-specifyGPUs', 1, 'Specify which GPUS on the system to use, for example, to use 3 and 4, use 34')
 cmd:option('-multiThreadGPUCopies', false, 'Faster for nn.Sequential modules, but does not work for nn.gModules at the moment')
-
+cmd:option('-debug', false, 'Prints detailed debug output to identify where bugs are occuring')
 opts = cmd:parse(arg)
 
 print(opts)
@@ -104,10 +104,26 @@ else
 end
 
 --DEFINE CRITERION
-print('Creating Criterion...')
---cFile = loadfile(opts.criterionFile)
---cFile()
+print('Parsing Criterion Defintions:')
 dofile(opts.criterionFile)
+
+--DETERMINE IF COMPLICATED MODEL IS BEING USED
+if(criteria == nil and defineModelFlow == nil) then
+	--do nothing, this is the default case
+	print('\tUsing single Criterion ...')
+	opts.usingMultiCriteria = false
+else
+	if(criterion ~= nil
+		or (criteria == nil and defineModelFlow ~= nil)
+		or (criteria ~= nil and defineModelFlow == nil)) then
+		print('\tWARNING: If \'criteria\' is defined, \'criterion\' will be ignored')
+		print('\tWARNING: \'criteria\' and function \'defineModelFlow()\' must always be defined together')
+	end
+
+	print('\tUsing Multi-Criteria setup and custom data flow in optimisation...')
+	opts.usingMultiCriteria = true
+end
+
 
 --ENABLE GPU SUPPORT
 print('Converting Criterion to CUDA...')
@@ -138,11 +154,18 @@ if(opts.doTraining) then
 		-- Train
 		trainer:train(epoch, trainDataLoader)
 
+		if opts.debug then
+			print('DEBUG: Training completed, switching to testing')
+		end
+
 		-- Test
 		trainer:test(epoch, testDataLoader, opts.passFullOutput2saveState)
 
 		if(opts.saveStateInterval > 0) then
 			if(epoch % opts.saveStateInterval == 0 and epoch > 0) then
+				if opts.debug then
+					print('DEBUG: calling saveState()')
+				end
 				saveState(epoch, loss, trainer.testOutput)
 			end
 		end

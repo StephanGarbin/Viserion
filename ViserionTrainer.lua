@@ -17,6 +17,9 @@ end
 
 function ViserionTrainer:train(epoch, dataloader)
 	--Scale learning rate if required
+	if self.opts.debug then
+		print('DEBUG: Calling defineCustomLearningRate()')
+	end
 	self.optimOptions.learningRate = defineCustomLearningRate(epoch, self.optimOptions.learningRate)
 
 	--update learning rate across devices if the model is a DPT
@@ -41,6 +44,9 @@ function ViserionTrainer:train(epoch, dataloader)
 	local avgDataTime = 0
 
 	--Switch Model to training
+	if self.opts.debug then
+		print('DEBUG: Switching model to training')
+	end
 	self.model:training()
 
 	print('TRAIN: Processing Epoch # ' .. epoch .. ' (LR = ' .. tostring(self.optimOptions.learningRate) .. ')')
@@ -50,27 +56,58 @@ function ViserionTrainer:train(epoch, dataloader)
 	for n, sample in dataloader:run() do
 		avgDataTime = avgDataTime + dataTimer:time().real
 
-		xlua.progress(ProgressBarStep, numBatches)
+		if not self.opts.debug then
+			xlua.progress(ProgressBarStep, numBatches)
+		else
+			print('DEBUG: Processing Batch ' .. tostring(n))
+		end
 
 		--Copy input and target to the GPU
+		if self.opts.debug then
+			print('DEBUG: Copying data to the host GPU')
+			print('DEBUG: Input size: ', sample.input:size())
+			print('DEBUG: Target size: ', sample.target:size())
+		end
 		self:cudaDeviceCopy(sample)
 
-		--print('model forward')
 		--Do forward pass
+		if self.opts.debug then
+			print('DEBUG: Forward pass model')
+		end
 		self.model:forward(self.input)
+		if self.opts.debug then
+			print('DEBUG: model output size', self.model.output:size())
+		end
 		
+		if self.opts.debug then
+			print('DEBUG: Resetting  model gradient parameters')
+		end
 		self.model:zeroGradParameters()
+
+
 		--Compute loss
+		if self.opts.debug then
+			print('DEBUG: Forward pass criterion')
+		end
 		local local_loss = self.criterion:forward(self.model.output, self.target)
-     		--print('Local loss')
+     	
 		loss[n] = local_loss
 
-		--print('criterion back')
 		--Do backward pass
+		if self.opts.debug then
+			print('DEBUG: Backwards pass criterion')
+		end
 		self.criterion:backward(self.model.output, self.target)
+
+		if self.opts.debug then
+			print('DEBUG: Backwards pass model')
+		end
 		self.model:backward(self.input, self.criterion.gradInput)
 
 		--Do Optim step
+		if self.opts.debug then
+			print('DEBUG: Calling the optimiser')
+		end
       	self.optimOptimiser(feval, self.params, self.optimOptions)
 
       	--https://github.com/soumith/cunnsparse/blob/master/doc/cunnmodules.md
@@ -106,6 +143,10 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	local avgDataTime = 0
 
 	if saveTestOutput then
+		if self.opts.debug then
+			print([[DEBUG: Creating Tensor to hold full size output,
+				this will call size() on your dataloader for the targets/labels]])
+		end
 		self.testOutput = torch.Tensor(dataloader:ySize())
 	else
 		self.testOutput = {}
@@ -119,8 +160,12 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	ProgressBarStep = 1
 	--Process all batches
 	for n, sample in dataloader:runNoShuffle() do
-
-		xlua.progress(ProgressBarStep, numBatches)
+		
+		if not self.opts.debug then
+			xlua.progress(ProgressBarStep, numBatches)
+		else
+			print('DEBUG: Processing Batch ' .. tostring(n))
+		end
 
 		local dataTime = dataTimer:time().real
 
@@ -163,6 +208,9 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 end
 
 function ViserionTrainer:cudaDeviceCopy(sample)
+	if self.opts.debug then
+			print('DEBUG: Your Host GPU is ' .. tostring(self.opts.gpuIDXs[1]))
+	end
 	cutorch.setDevice(self.opts.gpuIDXs[1])
 	if self.opts.numGPUs > 1 then
 		self.input = cutorch.createCudaHostTensor()

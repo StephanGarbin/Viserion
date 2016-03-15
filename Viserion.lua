@@ -4,6 +4,8 @@ require 'optim'
 require 'cunn'
 require 'cudnn'
 require 'cutorch'
+autograd = require 'autograd'
+
 local ViserionTrainer = require 'Viserion/ViserionTrainer'
 
 cmd = torch.CmdLine()
@@ -113,11 +115,8 @@ if(criteria == nil and defineModelFlow == nil) then
 	print('\tUsing single Criterion ...')
 	opts.usingMultiCriteria = false
 else
-	if(criterion ~= nil
-		or (criteria == nil and defineModelFlow ~= nil)
-		or (criteria ~= nil and defineModelFlow == nil)) then
-		print('\tWARNING: If \'criteria\' is defined, \'criterion\' will be ignored')
-		print('\tWARNING: \'criteria\' and function \'defineModelFlow()\' must always be defined together')
+	if criterion ~= nil then
+		--CHECK that everything is defined correctly!
 	end
 
 	print('\tUsing Multi-Criteria setup and custom data flow in optimisation...')
@@ -128,7 +127,7 @@ end
 --ENABLE GPU SUPPORT
 if opts.usingMultiCriteria then
 	print('Converting Criteria to CUDA...')
-	for c in criteria do
+	for i, c in ipairs(criteria) do
 		c:cuda()
 	end
 else
@@ -141,7 +140,15 @@ model:cuda()
 if not opts.disableCUDNN then
 	print('Converting Model to CUDNN...')
 	cudnn.convert(model, cudnn)
-	cudnn.convert(criterion, cudnn)
+	if opts.usingMultiCriteria then
+		print('Converting Criteria to CUDNN...')
+		for i, c in ipairs(criteria) do
+			cudnn.convert(c, cudnn)
+		end
+	else
+		print('Converting Criterion to CUDNN...')
+		cudnn.convert(criterion, cudnn)
+	end
 end
 print(model)
 

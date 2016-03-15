@@ -126,8 +126,16 @@ end
 
 
 --ENABLE GPU SUPPORT
-print('Converting Criterion to CUDA...')
-criterion:cuda()
+if opts.usingMultiCriteria then
+	print('Converting Criteria to CUDA...')
+	for c in criteria do
+		c:cuda()
+	end
+else
+	print('Converting Criterion to CUDA...')
+	criterion:cuda()
+end
+
 print('Converting Model to CUDA...')
 model:cuda()
 if not opts.disableCUDNN then

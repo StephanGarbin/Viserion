@@ -29,7 +29,7 @@ function ViserionTrainer:train(epoch, dataloader)
 
 	--The evaluation function for the optimiser
 	local function feval()
-		return self.criterion.output, self.gradParams
+		return 0, self.gradParams
 	end
 
 	--Time what we do
@@ -84,26 +84,73 @@ function ViserionTrainer:train(epoch, dataloader)
 		end
 		self.model:zeroGradParameters()
 
+		--Criterion Forward
+		if not self.opts.usingMultiCriteria then
+			if self.opts.debug then
+				print('DEBUG: Forward pass criterion')
+			end
+			local local_loss = self.criterion:forward(self.model.output, self.target)
+	     	
+			loss[n] = local_loss
+		else
+			criteriaForwardOutput = {}
+			for i, c in self.criterion do
+				if self.opts.debug then
+					print('DEBUG: Evaluating defineCriteriaFlowForward() for ' .. tostring(i))
+				end
+				--1. Evaluate user definitions
+				criteriaInputs, criteriaTargets =
+					defineCriteriaFlowForward(i, self.model.output, self.input, criteriaForwardOutput)
 
-		--Compute loss
-		if self.opts.debug then
-			print('DEBUG: Forward pass criterion')
+				if self.opts.debug then
+					print('DEBUG: Forward pass criterion ' .. tostring(i))
+				end
+				--2. Do Forward Pass
+				criteriaForwardOutput[i] = c:forward(criteriaInputs, criteriaTargets)
+			end
 		end
-		local local_loss = self.criterion:forward(self.model.output, self.target)
-     	
-		loss[n] = local_loss
 
 		--Do backward pass
-		if self.opts.debug then
-			print('DEBUG: Backwards pass criterion')
-		end
-		self.criterion:backward(self.model.output, self.target)
+		if not self.opts.usingMultiCriteria then
+			if self.opts.debug then
+				print('DEBUG: Backward pass criterion')
+			end
+			self.criterion:backward(self.model.output, self.target)
 
-		if self.opts.debug then
-			print('DEBUG: Backwards pass model')
-		end
-		self.model:backward(self.input, self.criterion.gradInput)
+			if self.opts.debug then
+				print('DEBUG: Backward pass model')
+			end
+			self.model:backward(self.input, self.criterion.gradInput)
+		else
 
+			criteriaBackwardOutput = {}
+			for i, c in self.criterion do
+				if self.opts.debug then
+					print('DEBUG: Evaluating defineCriteriaFlowBackward() for ' .. tostring(i))
+				end
+				--1. Evaluate user definitions
+				criteraInputs, criteraTargets =
+					defineCriteriaFlowBackward(self.model.output, self.input,
+						criteriaForwardOutput, criteriaBackwardOutput)
+
+				if self.opts.debug then
+					print('DEBUG: Backward pass criterion ' .. tostring(i))
+				end
+				--2. Do backward pass
+				criteriaBackwardOutput[i] = c:backward(criteriaInputs, criteriaTargets)
+			end
+
+			if self.opts.debug then
+					print('DEBUG: Evaluating defineModelFlowBackward()')
+				end
+			modelTarget =
+				defineModelFlowBackward(self.model.output, criteriaOutput, self.input)
+
+			if self.opts.debug then
+				print('DEBUG: Backward pass model')
+			end
+			self.model.backward(self.input, modelTarget)
+		end
 		--Do Optim step
 		if self.opts.debug then
 			print('DEBUG: Calling the optimiser')
@@ -124,7 +171,11 @@ function ViserionTrainer:train(epoch, dataloader)
 	end
 
 	print('\n')
-	print('Loss = ' .. tostring(loss:mean()))
+	if not self.opts.usingMultiCriteria then
+		print('Loss = ' .. tostring(loss:mean()))
+	else
+		defineCriteriaPrintOut(criteriaForwardOutput)
+	end
 	--print('Avg Model Time = ' .. tostring(avgModelTime / numBatches))
 	--print('Avg Data Time = ' .. tostring(avgDataTime / numBatches))
 	print('\n')
@@ -160,7 +211,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	ProgressBarStep = 1
 	--Process all batches
 	for n, sample in dataloader:runNoShuffle() do
-		
+
 		if not self.opts.debug then
 			xlua.progress(ProgressBarStep, numBatches)
 		else

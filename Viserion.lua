@@ -9,7 +9,7 @@ local ViserionTrainer = require 'Viserion/ViserionTrainer'
 cmd = torch.CmdLine()
 cmd:text('Options')
 cmd:option('-ioFile', '', 'Script specifing IO')
-cmd:option('-modelFile', '', 'Script defining model OR .t7 archive to load')
+cmd:option('-modelFile', '', 'Script defining model')
 cmd:option('-criterionFile', '', 'Script defining criterion to optimise')
 cmd:option('-optimFile', '', 'Script defining optimisation functions')
 cmd:option('-doTraining', false, 'Training/Test switch')

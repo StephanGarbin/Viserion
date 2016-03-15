@@ -2,16 +2,24 @@ local X = {}
 
 local ViserionMNISTLoader = torch.class('ViserionMNISTLoader', X)
 
-function ViserionMNISTLoader:__init(filename)
+function ViserionMNISTLoader:__init(filename, isLabels)
+	if not isLabels then
+		f = torch.DiskFile(filename, 'r'):binary():bigEndianEncoding()
+		s = f:readInt(4)
+		n = s[2]
 
-	f = torch.DiskFile(filename, 'r'):binary():bigEndianEncoding()
-	s = f:readInt(4)
-	n = s[2]
+		self.data = torch.ByteTensor(f:readByte(n * 28 * 28)):view(torch.LongStorage{n, 1, 28, 28}):float() / 255
+	  	
+		f:close()
+	else
+		f = torch.DiskFile(filename, 'r'):binary():bigEndianEncoding()
+		s = f:readInt(2)
+		n = s[2]
 
-	self.data = torch.ByteTensor(f:readByte(n * 28 * 28)):view(torch.LongStorage{n, 1, 28, 28}):float() / 255
-  	
-	f:close()
-
+		self.data = torch.ByteTensor(f:readByte(n)):view(torch.LongStorage{n}):float()
+	  	
+		f:close()
+	end
 end
 
 function ViserionMNISTLoader:size()

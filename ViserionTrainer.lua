@@ -64,7 +64,7 @@ function ViserionTrainer:train(epoch, dataloader)
 
 		--Copy input and target to the GPU
 		if self.opts.debug then
-			print('DEBUG: Copying data to the host GPU')
+			print('DEBUG: Copying data...')
 			print('DEBUG: Input size: ', sample.input:size())
 			print('DEBUG: Target size: ', sample.target:size())
 		end
@@ -98,17 +98,11 @@ function ViserionTrainer:train(epoch, dataloader)
 			criteriaForwardOutput = {}
 			for i, c in ipairs(self.criterion) do
 				if self.opts.debug then
-					print('DEBUG: Evaluating defineCriteriaFlowForward() for ' .. tostring(i))
-				end
-				--1. Evaluate user definitions
-				criteriaInputs, criteriaTargets =
-					defineCriteriaFlowForward(i, self.model.output, self.input, criteriaForwardOutput)
-
-				if self.opts.debug then
-					print('DEBUG: Forward pass criterion ' .. tostring(i))
+					print('DEBUG: Evaluating defineCriteriaFlowForward(), Forward pass criterion ' .. tostring(i))
 				end
 				--2. Do Forward Pass
-				criteriaForwardOutput[i] = c:forward(criteriaInputs, criteriaTargets)
+				criteriaForwardOutput[i] =
+					c:forward(defineCriteriaFlowForward(i, self.model.output, self.input, self.target, criteriaForwardOutput))
 			end
 		end
 
@@ -126,32 +120,29 @@ function ViserionTrainer:train(epoch, dataloader)
 		else
 
 			criteriaBackwardOutput = {}
-			for i, c in self.criterion do
+			for i, c in ipairs(self.criterion) do
 				if self.opts.debug then
-					print('DEBUG: Evaluating defineCriteriaFlowBackward() for ' .. tostring(i))
-				end
-				--1. Evaluate user definitions
-				criteraInputs, criteraTargets =
-					defineCriteriaFlowBackward(self.model.output, self.input,
-						criteriaForwardOutput, criteriaBackwardOutput)
-
-				if self.opts.debug then
-					print('DEBUG: Backward pass criterion ' .. tostring(i))
+					print('DEBUG: Evaluating defineCriteriaFlowBackward(), Backward pass criterion ' .. tostring(i))
 				end
 				--2. Do backward pass
-				criteriaBackwardOutput[i] = c:backward(criteriaInputs, criteriaTargets)
+				criteriaBackwardOutput[i] = 
+					c:backward(defineCriteriaFlowBackward(self.model.output, self.input,
+						criteriaForwardOutput, criteriaBackwardOutput))
 			end
 
 			if self.opts.debug then
 					print('DEBUG: Evaluating defineModelFlowBackward()')
-				end
+			end
 			modelTarget =
-				defineModelFlowBackward(self.model.output, criteriaOutput, self.input)
+				defineModelFlowBackward(self.model.output, criteriaBackwardOutput, self.input, self.target)
 
 			if self.opts.debug then
 				print('DEBUG: Backward pass model')
+				print('DEBUG: Your target is:', modelTarget)
+				print('DEBUG: Your model forward output was:', self.model.output)
 			end
-			self.model.backward(self.input, modelTarget)
+
+			self.model:backward(self.input, modelTarget)
 		end
 		--Do Optim step
 		if self.opts.debug then
@@ -261,19 +252,24 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 end
 
 function ViserionTrainer:cudaDeviceCopy(sample)
-	if self.opts.debug then
-			print('DEBUG: Your Host GPU is ' .. tostring(self.opts.gpuIDXs[1]))
-	end
-	cutorch.setDevice(self.opts.gpuIDXs[1])
-	if self.opts.numGPUs > 1 then
-		self.input = cutorch.createCudaHostTensor()
-		--self.target = cutorch.createCudaHostTensor()
-	else
-		self.input = torch.CudaTensor()
-		--self.target = torch.CudaTensor()
-	end
+	if not self.opts.disableCUDA then
+		if self.opts.debug then
+				print('DEBUG: Your Host GPU is ' .. tostring(self.opts.gpuIDXs[1]))
+		end
+		cutorch.setDevice(self.opts.gpuIDXs[1])
+		if self.opts.numGPUs > 1 then
+			self.input = cutorch.createCudaHostTensor()
+			--self.target = cutorch.createCudaHostTensor()
+		else
+			self.input = torch.CudaTensor()
+			--self.target = torch.CudaTensor()
+		end
 
-	self.target = torch.CudaTensor()
+		self.target = torch.CudaTensor()
+	else
+		self.input = torch.Tensor()
+		self.target = torch.Tensor()
+	end
 
 	self.input:resize(sample.input:size()):copy(sample.input)
 	self.target:resize(sample.target:size()):copy(sample.target)

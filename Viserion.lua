@@ -23,6 +23,7 @@ cmd:option('-saveStateInterval', -1, 'Interval in which saveState function in yo
 cmd:option('-passFullOutput2saveState', false, 'Set this to false so that full state output is not passed to the saveState function in your IO script.')
 cmd:option('-disableCUDNN', false, 'Use this to disable the CUDNN backend')
 cmd:option('-cudnnVerbose', false, 'Enable verbose output for CUDNN debug')
+cmd:option('-disableCUDA', false, 'Uses the CPU instead')
 cmd:option('-specifyGPUs', 1, 'Specify which GPUS on the system to use, for example, to use 3 and 4, use 34')
 cmd:option('-multiThreadGPUCopies', false, 'Faster for nn.Sequential modules, but does not work for nn.gModules at the moment')
 cmd:option('-debug', false, 'Prints detailed debug output to identify where bugs are occuring')
@@ -68,41 +69,43 @@ end
 
 opts.numGPUs, opts.gpuIDXs = separateDigits(opts.specifyGPUs)
 
-if opts.numGPUs > 1 then
-	print('Using GPUs: ', opts.gpuIDXs)
-	print('GPU Host: ', opts.gpuIDXs[1])
-	--enable flattenParams and NCLL,... splitting the minibatch!
-	model = nn.DataParallelTable(1, false, false):add(model, opts.gpuIDXs)
-	--potentially disable ncll
-	--enable asyncronous kernel launches
-	local options = opts
-	local nnCpy = nn
-	local cunnCpy = cunn
-	local cudnnCpy = cudnn
-	local cutorchCpy = cutorch
-	if opts.multiThreadGPUCopies then
-		print('Spawning ' .. tostring(opts.numGPUs) .. ' Threads for CUDA MemCpy operations...')
-		print('WARNING: If this causes FATAL_THREAD_PANIC, disable -multiThreadGPUCopies')
+if not opts.disableCUDA then
+	if opts.numGPUs > 1 then
+		print('Using GPUs: ', opts.gpuIDXs)
+		print('GPU Host: ', opts.gpuIDXs[1])
+		--enable flattenParams and NCLL,... splitting the minibatch!
+		model = nn.DataParallelTable(1, false, false):add(model, opts.gpuIDXs)
+		--potentially disable ncll
+		--enable asyncronous kernel launches
+		local options = opts
+		local nnCpy = nn
+		local cunnCpy = cunn
+		local cudnnCpy = cudnn
+		local cutorchCpy = cutorch
+		if opts.multiThreadGPUCopies then
+			print('Spawning ' .. tostring(opts.numGPUs) .. ' Threads for CUDA MemCpy operations...')
+			print('WARNING: If this causes FATAL_THREAD_PANIC, disable -multiThreadGPUCopies')
 
-		model:threads(function(idx)
-			print('Spawning Thread', idx)	
-			local nn = require 'nn'
-			local cudnn = require 'cudnn'
-			local cunn = require 'cunn'
-			local cutorch = require 'cutorch'
-			local torch = require 'torch'
-			cudnn.benchmark = true
-			cudnn.fastest = true
-			print('Using cudnn version: ', cudnn.version)
-			if options.cudnnVerbose then
-        			cudnn.verbose = true
-			end
-			return idx
-			end)
+			model:threads(function(idx)
+				print('Spawning Thread', idx)	
+				local nn = require 'nn'
+				local cudnn = require 'cudnn'
+				local cunn = require 'cunn'
+				local cutorch = require 'cutorch'
+				local torch = require 'torch'
+				cudnn.benchmark = true
+				cudnn.fastest = true
+				print('Using cudnn version: ', cudnn.version)
+				if options.cudnnVerbose then
+	        			cudnn.verbose = true
+				end
+				return idx
+				end)
+		end
+	else
+		cutorch.setDevice(opts.gpuIDXs[1])
+		print('Using GPU: ', opts.gpuIDXs[1])
 	end
-else
-	cutorch.setDevice(opts.gpuIDXs[1])
-	print('Using GPU: ', opts.gpuIDXs[1])
 end
 
 --DEFINE CRITERION
@@ -125,32 +128,37 @@ end
 
 
 --ENABLE GPU SUPPORT
-if opts.usingMultiCriteria then
-	print('Converting Criteria to CUDA...')
-	for i, c in ipairs(criteria) do
-		c:cuda()
-	end
-else
-	print('Converting Criterion to CUDA...')
-	criterion:cuda()
-end
-
-print('Converting Model to CUDA...')
-model:cuda()
-if not opts.disableCUDNN then
-	print('Converting Model to CUDNN...')
-	cudnn.convert(model, cudnn)
+if not opts.disableCUDA then
 	if opts.usingMultiCriteria then
-		print('Converting Criteria to CUDNN...')
+		print('Converting Criteria to CUDA...')
 		for i, c in ipairs(criteria) do
-			cudnn.convert(c, cudnn)
+			c:cuda()
 		end
 	else
-		print('Converting Criterion to CUDNN...')
-		cudnn.convert(criterion, cudnn)
+		print('Converting Criterion to CUDA...')
+		criterion:cuda()
+	end
+
+	print('Converting Model to CUDA...')
+	model:cuda()
+	if not opts.disableCUDNN then
+		print('Converting Model to CUDNN...')
+		cudnn.convert(model, cudnn)
+		if opts.usingMultiCriteria then
+			print('Converting Criteria to CUDNN...')
+			for i, c in ipairs(criteria) do
+				cudnn.convert(c, cudnn)
+			end
+		else
+			print('Converting Criterion to CUDNN...')
+			cudnn.convert(criterion, cudnn)
+		end
 	end
 end
 print(model)
+
+graph.dot(model.fg, 'myModel_fg', 'myModel_fg')
+graph.dot(model.bg, 'myModel_bg', 'myModel_bg')
 
 --DEFINE OPTIMISATION
 print('Defining Optimisation Parameters...')

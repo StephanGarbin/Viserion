@@ -73,17 +73,19 @@ function ViserionTrainer:train(epoch, dataloader)
 		--Do forward pass
 		if self.opts.debug then
 			print('DEBUG: Forward pass model')
+			print([[DEBUG: If this segfaults, check sizes carefully (especially of your convolutions). If using autograd and declaring local tensors, make sure they are the correct type, especially when using CUDA, as the defaulttensortype in Viserion is a floatTensor.]])
 		end
 		self.model:forward(self.input)
 		if self.opts.debug then
-			print('DEBUG: model output size', self.model.output:size())
+
+			--print('DEBUG: model output size', self.model.output:size())
 		end
 		
 		if self.opts.debug then
 			print('DEBUG: Resetting  model gradient parameters')
 		end
 		self.model:zeroGradParameters()
-
+		
 		--Criterion Forward
 		if not self.opts.usingMultiCriteria then
 			if self.opts.debug then
@@ -94,7 +96,7 @@ function ViserionTrainer:train(epoch, dataloader)
 			loss[n] = local_loss
 		else
 			criteriaForwardOutput = {}
-			for i, c in self.criterion do
+			for i, c in ipairs(self.criterion) do
 				if self.opts.debug then
 					print('DEBUG: Evaluating defineCriteriaFlowForward() for ' .. tostring(i))
 				end

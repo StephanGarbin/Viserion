@@ -157,8 +157,11 @@ print('Defining Optimisation Parameters...')
 dofile(opts.optimFile)
 
 --CREATE TRAINER
-local trainer = ViserionTrainer(model, criterion, optimOptimiser, optimConfig, defineCustomLearningRate, opts)
-
+if not opts.usingMultiCriteria then
+	trainer = ViserionTrainer(model, criterion, optimOptimiser, optimConfig, defineCustomLearningRate, opts)
+else
+	trainer = ViserionTrainer(model, criteria, optimOptimiser, optimConfig, defineCustomLearningRate, opts)
+end
 print('Finished all preliminaries...\n')
 --TRAIN
 if(opts.doTraining) then

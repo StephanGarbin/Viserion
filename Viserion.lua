@@ -27,6 +27,7 @@ cmd:option('-disableCUDA', false, 'Uses the CPU instead')
 cmd:option('-specifyGPUs', 1, 'Specify which GPUS on the system to use, for example, to use 3 and 4, use 34')
 cmd:option('-multiThreadGPUCopies', false, 'Faster for nn.Sequential modules, but does not work for nn.gModules at the moment')
 cmd:option('-debug', false, 'Prints detailed debug output to identify where bugs are occuring')
+cmd:option('-customDataLoaderFile', '', 'Specify this if you are using your own dataloaders')
 opts = cmd:parse(arg)
 
 print(opts)

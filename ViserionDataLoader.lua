@@ -37,6 +37,13 @@ function ViserionDataLoader:run()
 	local Xs = self.Xs
 	local Ys = self.Ys
 	local options = self.opts
+
+	--Compile custom dataloaders into function if required
+	local customDLs = nil
+	if options.customDataLoaderFile ~= '' then
+		customDLs = loadfile(opts.customDataLoaderFile)
+	end
+
 	--Create the parallel thread pool
 	 local pool = threads.Threads(self.numThreads,
 		function(idx)
@@ -44,6 +51,12 @@ function ViserionDataLoader:run()
 			--otherwise serialisation will make this fail
 			requireF = loadfile('Viserion/ViserionDataLoaderRequire.lua')
 			requireF()
+
+			--Load custom dataloaders if necessary
+			if customDLs ~= nil then
+				customDLs()
+			end
+
 			return idx
 		end,
 		function(idx)
@@ -121,6 +134,12 @@ function ViserionDataLoader:runNoShuffle()
 	local Xs = self.Xs
 	local Ys = self.Ys
 	local options = self.opts
+	--Compile custom dataloaders into function if required
+	local customDLs = nil
+	if options.customDataLoaderFile ~= '' then
+		customDLs = loadfile(opts.customDataLoaderFile)
+	end
+
 	--Create the parallel thread pool
 	--print('Num Threads: ', self.numThreads)
 	local pool = threads.Threads(self.numThreads,
@@ -129,6 +148,11 @@ function ViserionDataLoader:runNoShuffle()
 			--otherwise serialisation will make this fail
 			requireF = loadfile('Viserion/ViserionDataLoaderRequire.lua')
 			requireF()
+
+			--Load custom dataloaders if necessary
+			if customDLs ~= nil then
+				customDLs()
+			end
 
 			return idx
 		end,

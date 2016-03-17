@@ -220,8 +220,24 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 		self.model:forward(self.input)
 
 		--Compute loss
-		local local_loss = self.criterion:forward(self.model.output, self.target)
-     	loss[n] = local_loss
+		if not self.opts.usingMultiCriteria then
+			if self.opts.debug then
+				print('DEBUG: Forward pass criterion')
+			end
+			local local_loss = self.criterion:forward(self.model.output, self.target)
+	     	
+			loss[n] = local_loss
+		else
+			criteriaForwardOutput = {}
+			for i, c in ipairs(self.criterion) do
+				if self.opts.debug then
+					print('DEBUG: Evaluating defineCriteriaFlowForward(), Forward pass criterion ' .. tostring(i))
+				end
+				--2. Do Forward Pass
+				criteriaForwardOutput[i] =
+					c:forward(defineCriteriaFlowForward(i, self.model.output, self.input, self.target, criteriaForwardOutput))
+			end
+		end
 
      	--Save data if required
      	if saveTestOutput then

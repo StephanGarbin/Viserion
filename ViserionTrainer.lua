@@ -51,6 +51,7 @@ function ViserionTrainer:train(epoch, dataloader)
 
 	print('TRAIN: Processing Epoch # ' .. epoch .. ' (LR = ' .. tostring(self.optimOptions.learningRate) .. ')')
 
+	criteriaForwardOutputs = {}
 	ProgressBarStep = 1
 	--Process all batches
 	for n, sample in dataloader:run() do
@@ -104,6 +105,8 @@ function ViserionTrainer:train(epoch, dataloader)
 				criteriaForwardOutput[i] =
 					c:forward(defineCriteriaFlowForward(i, self.model.output, self.input, self.target, criteriaForwardOutput))
 			end
+
+			criteriaForwardOutputs[n] = criteriaForwardOutput
 		end
 
 		--Do backward pass
@@ -167,7 +170,7 @@ function ViserionTrainer:train(epoch, dataloader)
 	if not self.opts.usingMultiCriteria then
 		print('Loss = ' .. tostring(loss:mean()))
 	else
-		defineCriteriaPrintOut(criteriaForwardOutput)
+		defineCriteriaPrintOut(criteriaForwardOutputs)
 	end
 	--print('Avg Model Time = ' .. tostring(avgModelTime / numBatches))
 	--print('Avg Data Time = ' .. tostring(avgDataTime / numBatches))
@@ -200,6 +203,8 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	self.model:evaluate()
 
 	print('TEST: Processing Epoch # ' .. epoch)
+
+	criteriaForwardOutputs = {}
 
 	ProgressBarStep = 1
 	--Process all batches
@@ -237,6 +242,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 				criteriaForwardOutput[i] =
 					c:forward(defineCriteriaFlowForward(i, self.model.output, self.input, self.target, criteriaForwardOutput))
 			end
+			criteriaForwardOutputs[n] = criteriaForwardOutput
 		end
 
      	--Save data if required
@@ -259,7 +265,12 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	end
 
 	print('\n')
-	print('Loss = ' .. tostring(loss:mean()))
+
+	if not self.opts.usingMultiCriteria then
+		print('Loss = ' .. tostring(loss:mean()))
+	else
+		defineCriteriaPrintOut(criteriaForwardOutputs)
+	end
 	--print('Avg Model Time = ' .. tostring(avgModelTime / numBatches))
 	--print('Avg Data Time = ' .. tostring(avgDataTime / numBatches))
 	print('----------------------------------------------------------------------------------------------');

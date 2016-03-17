@@ -28,6 +28,7 @@ cmd:option('-specifyGPUs', 1, 'Specify which GPUS on the system to use, for exam
 cmd:option('-multiThreadGPUCopies', false, 'Faster for nn.Sequential modules, but does not work for nn.gModules at the moment')
 cmd:option('-debug', false, 'Prints detailed debug output to identify where bugs are occuring')
 cmd:option('-customDataLoaderFile', '', 'Specify this if you are using your own dataloaders')
+cmd:option('-modelName', 'myModel', 'Specify model name. This is used when saving a gModule grap for example')
 opts = cmd:parse(arg)
 
 print(opts)
@@ -158,8 +159,10 @@ if not opts.disableCUDA then
 end
 print(model)
 
-graph.dot(model.fg, 'myModel_fg', 'myModel_fg')
-graph.dot(model.bg, 'myModel_bg', 'myModel_bg')
+print('Saving graphics of the defined model...')
+graph.dot(model.fg, opts.modelName .. '_fg', opts.modelName .. '_fg')
+graph.dot(model.bg, opts.modelName .. '_bg', opts.modelName .. '_bg')
+
 
 --DEFINE OPTIMISATION
 print('Defining Optimisation Parameters...')
@@ -171,6 +174,7 @@ if not opts.usingMultiCriteria then
 else
 	trainer = ViserionTrainer(model, criteria, optimOptimiser, optimConfig, defineCustomLearningRate, opts)
 end
+
 print('Finished all preliminaries...\n')
 --TRAIN
 if(opts.doTraining) then

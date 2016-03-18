@@ -175,6 +175,10 @@ function ViserionTrainer:train(epoch, dataloader)
 	--print('Avg Model Time = ' .. tostring(avgModelTime / numBatches))
 	--print('Avg Data Time = ' .. tostring(avgDataTime / numBatches))
 	print('\n')
+
+	if not self.opts.usingMultiCriteria then
+		return loss:mean()
+	end
 end
 
 function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
@@ -276,6 +280,10 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	print('----------------------------------------------------------------------------------------------');
 	print('----------------------------------------------------------------------------------------------');
 	print('\n\n')
+
+	if not self.opts.usingMultiCriteria then
+		return loss:mean()
+	end
 end
 
 function ViserionTrainer:cudaDeviceCopy(sample)

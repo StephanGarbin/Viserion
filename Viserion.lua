@@ -4,7 +4,11 @@ require 'optim'
 require 'cunn'
 require 'cudnn'
 require 'cutorch'
+require 'nngraph'
+
 autograd = require 'autograd'
+
+require 'Viserion/ViserionPlotting'
 
 local ViserionTrainer = require 'Viserion/ViserionTrainer'
 
@@ -17,7 +21,7 @@ cmd:option('-optimFile', '', 'Script defining optimisation functions')
 cmd:option('-doTraining', false, 'Training/Test switch')
 cmd:option('-batchSize', 1, 'Batch size')
 cmd:option('-numEpochs', 100, '#Epochs')
-cmd:option('-startEpoch', 0, 'Starting epoch for training')
+cmd:option('-startEpoch', 1, 'Starting epoch for training')
 cmd:option('-numThreads', 1, '#Threads for data loading')
 cmd:option('-saveStateInterval', -1, 'Interval in which saveState function in your IO script is called. Set to -1 to disable')
 cmd:option('-passFullOutput2saveState', false, 'Set this to false so that full state output is not passed to the saveState function in your IO script.')
@@ -158,11 +162,12 @@ if not opts.disableCUDA then
 	end
 end
 print(model)
-
-print('Saving graphics of the defined model...')
-graph.dot(model.fg, opts.modelName .. '_fg', opts.modelName .. '_fg')
-graph.dot(model.bg, opts.modelName .. '_bg', opts.modelName .. '_bg')
-
+print(torch.typename(model))
+if torch.typename(model) == 'nn.gModule' then
+	print('Saving graphics of the defined model...')
+	graph.dot(model.fg, opts.modelName .. '_fg', opts.modelName .. '_fg')
+	graph.dot(model.bg, opts.modelName .. '_bg', opts.modelName .. '_bg')
+end
 
 --DEFINE OPTIMISATION
 print('Defining Optimisation Parameters...')
@@ -180,17 +185,23 @@ print('Finished all preliminaries...\n')
 if(opts.doTraining) then
 	print('Starting training from epoch ' .. tostring(opts.startEpoch) .. '... ')
 
+	--Save the loss in training and testing
+	if not opts.usingMultiCriteria then
+		overallLossTrain = torch.Tensor(opts.numEpochs):fill(-1)
+		overallLossTest = torch.Tensor(opts.numEpochs):fill(-1)
+	end
+	
 	for epoch = opts.startEpoch, opts.numEpochs do
 
 		-- Train
-		trainer:train(epoch, trainDataLoader)
+		lossTrain = trainer:train(epoch, trainDataLoader)
 
 		if opts.debug then
 			print('DEBUG: Training completed, switching to testing')
 		end
 
 		-- Test
-		trainer:test(epoch, testDataLoader, opts.passFullOutput2saveState)
+		lossTest = trainer:test(epoch, testDataLoader, opts.passFullOutput2saveState)
 
 		if(opts.saveStateInterval > 0) then
 			if(epoch % opts.saveStateInterval == 0 and epoch > 0) then
@@ -200,9 +211,17 @@ if(opts.doTraining) then
 				saveState(epoch, loss, trainer.testOutput)
 			end
 		end
+
 	end
 
-	saveState(opts.numEpochs, loss, trainer.testOutput)
+	if not opts.usingMultiCriteria then
+		overallLossTrain[epoch] = lossTrain
+		overallLossTest[epoch] = lossTest
+		plotLoss(overallLossTrain, opts.modelName .. '_Train')
+		plotLoss(overallLossTest, opts.modelName .. '_Test')
+	end
+
+	saveState(opts.numEpochs, lossTrain, lossTest, trainer.testOutput)
 	print(lossAll)
 else
 	print('Just testing ' .. tostring(opts.startEpoch) .. '... ')

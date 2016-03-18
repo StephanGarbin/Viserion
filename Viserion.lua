@@ -5,8 +5,6 @@ require 'cunn'
 require 'cudnn'
 require 'cutorch'
 require 'nngraph'
-require 'gnuplot'
-
 
 autograd = require 'autograd'
 
@@ -215,7 +213,7 @@ if(opts.doTraining) then
 			end
 		end
 
-		if enablePlots then
+		if opts.enablePlots then
 			--do print out automatically if necessary
 			if not opts.usingMultiCriteria then
 				if opts.debug then

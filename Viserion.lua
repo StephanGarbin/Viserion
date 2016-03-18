@@ -7,6 +7,7 @@ require 'cutorch'
 require 'nngraph'
 require 'gnuplot'
 
+
 autograd = require 'autograd'
 
 require 'Viserion/ViserionPlotting'
@@ -34,6 +35,7 @@ cmd:option('-multiThreadGPUCopies', false, 'Faster for nn.Sequential modules, bu
 cmd:option('-debug', false, 'Prints detailed debug output to identify where bugs are occuring')
 cmd:option('-customDataLoaderFile', '', 'Specify this if you are using your own dataloaders')
 cmd:option('-modelName', 'myModel', 'Specify model name. This is used when saving a gModule grap for example')
+cmd:option('-enablePlots', false, 'Plots loss to a file')
 opts = cmd:parse(arg)
 
 print(opts)
@@ -163,7 +165,7 @@ if not opts.disableCUDA then
 	end
 end
 print(model)
-print(torch.typename(model))
+
 if torch.typename(model) == 'nn.gModule' then
 	print('Saving graphics of the defined model...')
 	graph.dot(model.fg, opts.modelName .. '_fg', opts.modelName .. '_fg')
@@ -213,17 +215,19 @@ if(opts.doTraining) then
 			end
 		end
 
-		--do print out automatically if necessary
-		if not opts.usingMultiCriteria then
-			if opts.debug then
-				print('DEBUG: generating figures for loss')
+		if enablePlots then
+			--do print out automatically if necessary
+			if not opts.usingMultiCriteria then
+				if opts.debug then
+					print('DEBUG: generating figures for loss')
+					print('DEBUG: Note: there are known issues with gnuplot that can make this segfault')
+				end
+				overallLossTrain[epoch] = lossTrain
+				overallLossTest[epoch] = lossTest
+				plotLoss(overallLossTrain, opts.modelName .. '_Train')
+				plotLoss(overallLossTest, opts.modelName .. '_Test')
 			end
-			overallLossTrain[epoch] = lossTrain
-			overallLossTest[epoch] = lossTest
-			plotLoss(overallLossTrain, opts.modelName .. '_Train')
-			plotLoss(overallLossTest, opts.modelName .. '_Test')
 		end
-
 	end
 
 	saveState(opts.numEpochs, lossTrain, lossTest, trainer.testOutput)

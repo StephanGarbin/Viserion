@@ -72,7 +72,7 @@ function ViserionTrainer:train(epoch, dataloader)
 				print('DEBUG: Input size: ', sample.input:size())
 			end
 
-			if type(target.input) == 'table' then
+			if type(sample.target) == 'table' then
 				print('DEBUG: Target size: ', sample.target)
 			else
 				print('DEBUG: Target size: ', sample.target:size())
@@ -328,17 +328,16 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 end
 
 function ViserionTrainer:cudaDeviceCopy(sample)
-
 	if not self.opts.disableCUDA then
 		if self.opts.debug then
 				print('DEBUG: Your Host GPU is ' .. tostring(self.opts.gpuIDXs[1]))
 		end
 		cutorch.setDevice(self.opts.gpuIDXs[1])
 	end
-	
+
 	if type(sample.input) == 'table' then
 		self.input = {}
-		for i,e in ipairs(sample.input)
+		for i,e in ipairs(sample.input) do
 			if not self.opts.disableCUDA then
 				if self.opts.numGPUs > 1 then
 					self.input[i] = torch.createCudaHostTensor()
@@ -364,10 +363,10 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 
 		self.input:resize(sample.input:size()):copy(sample.input)
 	end
-
+	
 	if type(sample.target) == 'table' then
 		self.target = {}
-		for i,e in ipairs(sample.target)
+		for i,e in ipairs(sample.target) do
 			if not self.opts.disableCUDA then
 				if self.opts.numGPUs > 1 then
 					self.target[i] = torch.createCudaHostTensor()

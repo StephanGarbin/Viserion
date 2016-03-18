@@ -193,15 +193,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	local avgModelTime = 0
 	local avgDataTime = 0
 
-	if saveTestOutput then
-		if self.opts.debug then
-			print([[DEBUG: Creating Tensor to hold full size output,
-				this will call size() on your dataloader for the targets/labels]])
-		end
-		self.testOutput = torch.Tensor(dataloader:ySize())
-	else
-		self.testOutput = {}
-	end
+	self.testOutput = nil
 
 	--Switch Model to evaluation
 	self.model:evaluate()
@@ -228,6 +220,35 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 		--Do forward pass
 		self.model:forward(self.input)
 
+		if self.testOutput == nil and saveTestOutput then
+			if self.opts.debug then
+				print('DEBUG: Creating table to hold full size output of your model')
+			end
+			if type(self.model.output) == 'table' then
+				self.testOutput = {}
+
+				for i, e in ipairs(self.model.output) do
+					local cSize = self.model.output[i]:size()
+					cSize[1] = dataloader:size()
+					self.testOutput[i] = torch.Tensor(cSize)
+				end
+
+				if self.opts.debug then
+					print('DEBUG: Created table of dimension', self.testOutput)
+				end
+			else
+				if self.opts.debug then
+					print('DEBUG: Creating tensor to hold full size output of your model')
+				end
+				local cSize = self.model.output:size()
+				cSize[1] = dataloader:size()
+				self.testOutput = torch.Tensor(cSize)
+				if self.opts.debug then
+					print('DEBUG: Created tensor of size', cSize)
+				end
+			end
+		end
+
 		--Compute loss
 		if not self.opts.usingMultiCriteria then
 			if self.opts.debug then
@@ -251,11 +272,22 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
      	--Save data if required
      	if saveTestOutput then
-     		local tmp = self.model.output:float()
-     		for i = 1, (#sample.target)[1] do
-     			self.testOutput[(n - 1) * self.opts.batchSize + i] = tmp[i]
+     		if self.opts.debug then
+				print('DEBUG: Saving model output ' .. tostring(i))
+			end
+     		if type(self.model.output) == 'table' then
+     			for i, e in ipairs(self.model.output) do
+     				local tmp = self.model.output[i]:float()
+		     		for i = 1, (#sample.target)[1] do
+		     			self.testOutput[i][(n - 1) * self.opts.batchSize + i] = tmp[i]
+		     		end
+     			end
+     		else
+	     		local tmp = self.model.output:float()
+	     		for i = 1, (#sample.target)[1] do
+	     			self.testOutput[(n - 1) * self.opts.batchSize + i] = tmp[i]
+	     		end
      		end
-     		--collectgarbage()
      	end
 
 		--Save some debug info

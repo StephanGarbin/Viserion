@@ -5,6 +5,7 @@ require 'cunn'
 require 'cudnn'
 require 'cutorch'
 require 'nngraph'
+require 'gnuplot'
 
 autograd = require 'autograd'
 
@@ -187,8 +188,8 @@ if(opts.doTraining) then
 
 	--Save the loss in training and testing
 	if not opts.usingMultiCriteria then
-		overallLossTrain = torch.Tensor(opts.numEpochs):fill(-1)
-		overallLossTest = torch.Tensor(opts.numEpochs):fill(-1)
+		overallLossTrain = torch.Tensor(opts.numEpochs):fill(0)
+		overallLossTest = torch.Tensor(opts.numEpochs):fill(0)
 	end
 	
 	for epoch = opts.startEpoch, opts.numEpochs do
@@ -212,13 +213,17 @@ if(opts.doTraining) then
 			end
 		end
 
-	end
+		--do print out automatically if necessary
+		if not opts.usingMultiCriteria then
+			if opts.debug then
+				print('DEBUG: generating figures for loss')
+			end
+			overallLossTrain[epoch] = lossTrain
+			overallLossTest[epoch] = lossTest
+			plotLoss(overallLossTrain, opts.modelName .. '_Train')
+			plotLoss(overallLossTest, opts.modelName .. '_Test')
+		end
 
-	if not opts.usingMultiCriteria then
-		overallLossTrain[epoch] = lossTrain
-		overallLossTest[epoch] = lossTest
-		plotLoss(overallLossTrain, opts.modelName .. '_Train')
-		plotLoss(overallLossTest, opts.modelName .. '_Test')
 	end
 
 	saveState(opts.numEpochs, lossTrain, lossTest, trainer.testOutput)

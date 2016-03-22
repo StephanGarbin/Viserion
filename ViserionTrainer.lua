@@ -55,6 +55,7 @@ function ViserionTrainer:train(epoch, dataloader)
 	ProgressBarStep = 1
 	--Process all batches
 	for n, sample in dataloader:run() do
+		
 		avgDataTime = avgDataTime + dataTimer:time().real
 
 		if not self.opts.debug then
@@ -213,7 +214,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
 	ProgressBarStep = 1
 	--Process all batches
-	for n, sample in dataloader:runNoShuffle() do
+	for n, sample in dataloader:run() do
 
 		if not self.opts.debug then
 			xlua.progress(ProgressBarStep, numBatches)

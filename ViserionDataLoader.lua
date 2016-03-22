@@ -1,4 +1,4 @@
-local threads = require 'threads'
+threads = require 'threads'
 threads.Threads.serialization('threads.sharedserialize')
 
 X = {}
@@ -38,35 +38,51 @@ function ViserionDataLoader:run()
 	local Ys = self.Ys
 	local options = self.opts
 
-	--Compile custom dataloaders into function if required
-	local customDLs = nil
-	if options.customDataLoaderFile ~= '' then
-		customDLs = loadfile(opts.customDataLoaderFile)
+	if self.opts.debug then
+		print('DEBUG: Creating Thread Pool with ' .. tostring(self.numThreads) .. ' threads')
 	end
 
+	local lViserionBinaryLoader = require('Viserion/dataLoaders/ViserionBinaryLoader')
+	local lViserionMNISTLoader = require('Viserion/dataLoaders/ViserionMNISTLoader')
+	local lViserionStereoHDF5Loader = require('Viserion/dataLoaders/ViserionStereoHDF5Loader')
 	--Create the parallel thread pool
-	 local pool = threads.Threads(self.numThreads,
+	local pool = threads.Threads(self.numThreads,
 		function(idx)
 			--We need to declare required files here,
 			--otherwise serialisation will make this fail
-			requireF = loadfile('Viserion/ViserionDataLoaderRequire.lua')
-			requireF()
+			if options.debug then
+				print('DEBUG: Loading the require file on ', idx)
+			end
+			ViserionBinaryLoader = lViserionBinaryLoader
+			ViserionMNISTLoader = lViserionMNISTLoader
+			ViserionStereoHDF5Loader = lViserionStereoHDF5Loader
 
 			--Load custom dataloaders if necessary
-			if customDLs ~= nil then
-				customDLs()
+			if options.customDataLoaderFile ~= '' then
+				if options.debug then
+					print('DEBUG: Loading Custom DataLoader')
+				end
+				dofile(options.customDataLoaderFile)
 			end
 
 			return idx
 		end,
 		function(idx)
-			--print('Spawing IO Thread...', idx)
+
+			if options.debug then
+				print('DEBUG: Spawing IO Thread...', idx)
+			end
+			
 			_G.x = Xs
 			_G.y = Ys
 			_G.opts = options
-		end
-		)
 
+		end
+	)
+
+	if self.opts.debug then
+		print('DEBUG: Creating Random Permutation')
+	end
 	local perm = torch.randperm(self.__size)
 	
 	numEnqueuedBatches = 0
@@ -108,13 +124,26 @@ function ViserionDataLoader:run()
 		end
 	end
 
+	if self.opts.debug then
+			print('DEBUG: Creating Training Loop')
+	end
 	local function loop()
+		if self.opts.debug then
+			print('DEBUG: Creating Jobs')
+		end
 		createJobs()
 
 		if not pool:hasjob() then
+			if self.opts.debug then
+				print('DEBUG: Thread Pool has no more jobs')
+			end
 			pool:synchronize()
         	return nil
       	end
+
+      	if self.opts.debug then
+			print('DEBUG: Running dojob()')
+		end
 		pool:dojob()
 
 		--Check for errors

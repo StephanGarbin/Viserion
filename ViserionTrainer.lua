@@ -139,7 +139,7 @@ function ViserionTrainer:train(epoch, dataloader)
 				end
 				--2. Do backward pass
 				criteriaBackwardOutput[i] = 
-					c:backward(defineCriteriaFlowBackward(self.model.output, self.input, self.target,
+					c:backward(defineCriteriaFlowBackward(i, self.model.output, self.input, self.target,
 						criteriaForwardOutput, criteriaBackwardOutput))
 			end
 

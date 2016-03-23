@@ -80,7 +80,7 @@ function ViserionTrainer:train(epoch, dataloader)
 			end
 		end
 		self:cudaDeviceCopy(sample)
-
+		
 		--Do forward pass
 		if self.opts.debug then
 			print('DEBUG: Forward pass model')

@@ -38,15 +38,6 @@ opts = cmd:parse(arg)
 
 print(opts)
 
-torch.setdefaulttensortype('torch.FloatTensor')
-
-cudnn.benchmark = true
-cudnn.fastest = true
-print('Using cudnn version: ', cudnn.version)
-if opts.cudnnVerbose then
-	cudnn.verbose = true
-end
-
 viserionAsFunc = loadfile('Viserion/ViserionMain.lua')
 
 if opts.debug then

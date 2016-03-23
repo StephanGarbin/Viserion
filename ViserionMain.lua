@@ -1,3 +1,12 @@
+torch.setdefaulttensortype('torch.FloatTensor')
+
+cudnn.benchmark = true
+cudnn.fastest = true
+print('Using cudnn version: ', cudnn.version)
+if opts.cudnnVerbose then
+	cudnn.verbose = true
+end
+
 --DATA HANDLING
 print('Loading Data...')
 dofile(opts.ioFile)

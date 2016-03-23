@@ -1,3 +1,18 @@
+require 'torch'
+require 'nn'
+require 'optim'
+require 'cunn'
+require 'cudnn'
+require 'cutorch'
+require 'nngraph'
+
+autograd = require 'autograd'
+
+require 'Viserion/ViserionPlotting'
+
+ViserionTrainer = require 'Viserion/ViserionTrainer'
+
+
 torch.setdefaulttensortype('torch.FloatTensor')
 
 cudnn.benchmark = true

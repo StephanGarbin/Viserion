@@ -1,16 +1,4 @@
 require 'torch'
-require 'nn'
-require 'optim'
-require 'cunn'
-require 'cudnn'
-require 'cutorch'
-require 'nngraph'
-
-autograd = require 'autograd'
-
-require 'Viserion/ViserionPlotting'
-
-ViserionTrainer = require 'Viserion/ViserionTrainer'
 
 cmd = torch.CmdLine()
 cmd:text('Options')

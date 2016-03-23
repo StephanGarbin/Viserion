@@ -7,11 +7,18 @@ ViserionDataLoader = torch.class("ViserionDataLoader", X)
 
 
 function ViserionDataLoader:__init(options, Xs, Ys)
-	assert(Xs:size()[1] == Ys:size()[1])
-	
+	if torch.type(Xs:size()) ~= 'table' then
+		assert(Xs:size()[1] == Ys:size()[1])
+		
+		self.__size = Xs:size()[1]
+	else
+		assert(Xs:size()[1][1] == Ys:size()[1][1])
+
+		self.__size = Xs:size()[1][1]
+	end
+
 	self.Xs = Xs
 	self.Ys = Ys
-	self.__size = Xs:size()[1]
 	--shorthand as these are used all the time
 	self.batchSize = options.batchSize
 	self.numThreads = options.numThreads

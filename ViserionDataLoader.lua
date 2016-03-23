@@ -8,12 +8,8 @@ ViserionDataLoader = torch.class("ViserionDataLoader", X)
 
 function ViserionDataLoader:__init(options, Xs, Ys)
 	if torch.type(Xs:size()) ~= 'table' then
-		assert(Xs:size()[1] == Ys:size()[1])
-		
 		self.__size = Xs:size()[1]
 	else
-		assert(Xs:size()[1][1] == Ys:size()[1][1])
-
 		self.__size = Xs:size()[1][1]
 	end
 

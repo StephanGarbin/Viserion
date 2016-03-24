@@ -57,7 +57,7 @@ function ViserionDataLoader:run()
 				print('DEBUG: Loading the require file on ', idx)
 			end
 			ViserionBinaryLoader = lViserionBinaryLoader
-			ViserionMNISTLoader = lViserionMNISTLoader
+			--require('Viserion/dataLoaders/ViserionMNISTLoader')
 			ViserionStereoHDF5Loader = lViserionStereoHDF5Loader
 
 			--Load custom dataloaders if necessary

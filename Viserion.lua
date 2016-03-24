@@ -22,6 +22,7 @@ cmd:option('-debug', false, 'Prints detailed debug output to identify where bugs
 cmd:option('-customDataLoaderFile', '', 'Specify this if you are using your own dataloaders')
 cmd:option('-modelName', 'myModel', 'Specify model name. This is used when saving a gModule grap for example')
 cmd:option('-enablePlots', false, 'Plots loss to a file')
+cmd:option('-printCLErrors', false, 'Switches plots to doClassification')
 opts = cmd:parse(arg)
 
 print(opts)

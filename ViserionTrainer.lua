@@ -39,9 +39,16 @@ function ViserionTrainer:train(epoch, dataloader)
 	local numBatches = math.ceil(dataloader:size() / self.opts.batchSize)
 
 	--Store progression of loss, time to load data & to execute
-	local loss = torch.Tensor(numBatches)
+	local loss = torch.Tensor(numBatches):fill(0)
 	local avgModelTime = 0
 	local avgDataTime = 0
+
+	local t1 = nil
+	local t5 = nil
+	if opts.printCLErrors then
+		t1 = torch.Tensor(numBatches):fill(0)
+		t5 = torch.Tensor(numBatches):fill(0)
+	end
 
 	--Switch Model to training
 	if self.opts.debug then
@@ -105,6 +112,14 @@ function ViserionTrainer:train(epoch, dataloader)
 			local local_loss = self.criterion:forward(self.model.output, self.target)
 	     	
 			loss[n] = local_loss
+
+			if opts.printCLErrors then
+				lt1, lt5 = self:computeClassificationErrors(self.model.output, sample.target)
+				t1[n] = lt1
+				if lt5 ~= nil then
+					t5[n] = lt5
+				end
+			end
 		else
 			criteriaForwardOutput = {}
 			for i, c in ipairs(self.criterion) do
@@ -179,6 +194,10 @@ function ViserionTrainer:train(epoch, dataloader)
 	print('\n')
 	if not self.opts.usingMultiCriteria then
 		print('Loss = ' .. tostring(loss:mean()))
+
+		if opts.printCLErrors then
+			print('Top1Error = ' .. tostring(t1:mean()) .. ' Top5Error = ' .. tostring(t5:mean()))
+		end
 	else
 		defineCriteriaPrintOut(criteriaForwardOutputs)
 	end
@@ -199,7 +218,14 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	local numBatches = math.ceil(dataloader:size() / self.opts.batchSize)
 
 	--Store progression of loss, time to load data & to execute
-	local loss = torch.Tensor(numBatches)
+	local loss = torch.Tensor(numBatches):fill(0)
+	local t1 = nil
+	local t5 = nil
+	if opts.printCLErrors then
+		t1 = torch.Tensor(numBatches):fill(0)
+		t5 = torch.Tensor(numBatches):fill(0)
+	end
+
 	local avgModelTime = 0
 	local avgDataTime = 0
 
@@ -267,6 +293,14 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 			local local_loss = self.criterion:forward(self.model.output, self.target)
 	     	
 			loss[n] = local_loss
+
+			if opts.printCLErrors then
+				lt1, lt5 = self:computeClassificationErrors(self.model.output, sample.target)
+				t1[n] = lt1
+				if lt5 ~= nil then
+					t5[n] = lt5
+				end
+			end
 		else
 			criteriaForwardOutput = {}
 			for i, c in ipairs(self.criterion) do
@@ -314,6 +348,10 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
 	if not self.opts.usingMultiCriteria then
 		print('Loss = ' .. tostring(loss:mean()))
+
+		if opts.printCLErrors then
+			print('Top1Error = ' .. tostring(t1:mean()) .. ' Top5Error = ' .. tostring(t5:mean()))
+		end
 	else
 		defineCriteriaPrintOut(criteriaForwardOutputs)
 	end
@@ -341,7 +379,7 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 		for i,e in ipairs(sample.input) do
 			if not self.opts.disableCUDA then
 				if self.opts.numGPUs > 1 then
-					self.input[i] = torch.createCudaHostTensor()
+					self.input[i] = cutorch.createCudaHostTensor()
 				else
 					self.input[i] = torch.CudaTensor()
 				end
@@ -370,7 +408,7 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 		for i,e in ipairs(sample.target) do
 			if not self.opts.disableCUDA then
 				if self.opts.numGPUs > 1 then
-					self.target[i] = torch.createCudaHostTensor()
+					self.target[i] = cutorch.createCudaHostTensor()
 				else
 					self.target[i] = torch.CudaTensor()
 				end
@@ -395,5 +433,24 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 	end
 end
 
+function ViserionTrainer:computeClassificationErrors(modelForward, target)
+	target = target:view(torch.LongStorage{target:size()[1], 1})
+
+	sorted, idxs = torch.sort(modelForward, 2, true)
+
+	idxs = idxs - 1
+
+	local tmp = torch.clamp((idxs[{{}, 1}]:float() - target:float()):abs(),0,1)
+
+	top1Error = 1 - torch.sum(tmp) / modelForward:size()[1]
+
+	if modelForward:size()[2] >= 5 then
+		local tmp2 = torch.clamp((idxs[{{}, {1, 5}}]:float() - torch.expand(target:float(), target:size()[1], 5)):abs(),0,1)
+
+		top5Error = 1 - torch.sum(tmp2) / modelForward:size()[1]
+	end
+
+	return top1Error, top5Error
+end
 
 return X.ViserionTrainer

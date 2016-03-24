@@ -199,7 +199,7 @@ function ViserionTrainer:train(epoch, dataloader)
 			print('Top1Error = ' .. tostring(t1:mean()) .. ' Top5Error = ' .. tostring(t5:mean()))
 		end
 	else
-		defineCriteriaPrintOut(criteriaForwardOutputs)
+		defineCriteriaPrintOut(epoch, true, criteriaForwardOutputs)
 	end
 	--print('Avg Model Time = ' .. tostring(avgModelTime / numBatches))
 	--print('Avg Data Time = ' .. tostring(avgDataTime / numBatches))
@@ -353,7 +353,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 			print('Top1Error = ' .. tostring(t1:mean()) .. ' Top5Error = ' .. tostring(t5:mean()))
 		end
 	else
-		defineCriteriaPrintOut(criteriaForwardOutputs)
+		defineCriteriaPrintOut(epoch, false, criteriaForwardOutputs)
 	end
 	--print('Avg Model Time = ' .. tostring(avgModelTime / numBatches))
 	--print('Avg Data Time = ' .. tostring(avgDataTime / numBatches))

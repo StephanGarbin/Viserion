@@ -428,7 +428,7 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 		else
 			self.target = torch.Tensor()
 		end
-		
+
 		self.target:resize(sample.target:size()):copy(sample.target)
 	end
 end

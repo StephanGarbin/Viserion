@@ -85,9 +85,9 @@ if not opts.disableCUDA then
 				end)
 		end
 	else
-		cutorch.setDevice(opts.gpuIDXs[1])
 		print('Using GPU: ', opts.gpuIDXs[1])
 	end
+	cutorch.setDevice(opts.gpuIDXs[1])
 end
 
 --DEFINE CRITERION

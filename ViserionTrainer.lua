@@ -375,61 +375,81 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 	end
 
 	if type(sample.input) == 'table' then
-		self.input = {}
-		for i,e in ipairs(sample.input) do
-			if not self.opts.disableCUDA then
-				if self.opts.numGPUs > 1 then
-					self.input[i] = cutorch.createCudaHostTensor()
+		if sample.input == nil then
+			self.input = {}
+			for i,e in ipairs(sample.input) do
+				if not self.opts.disableCUDA then
+					if self.opts.numGPUs > 1 then
+						self.input[i] = cutorch.createCudaHostTensor()
+					else
+						self.input[i] = torch.CudaTensor()
+					end
 				else
-					self.input[i] = torch.CudaTensor()
+					self.input[i] = torch.Tensor()
 				end
-			else
-				self.input[i] = torch.Tensor()
-			end
 
-			self.input[i]:resize(sample.input[i]:size()):copy(sample.input[i])
-		end
-	else
-		if not self.opts.disableCUDA then
-			if self.opts.numGPUs > 1 then
-				self.input = cutorch.createCudaHostTensor()
-			else
-				self.input = torch.CudaTensor()
+				self.input[i]:resize(sample.input[i]:size()):copy(sample.input[i])
 			end
 		else
-			self.input = torch.Tensor()
+			for i,e in ipairs(sample.input) do
+				self.input[i]:copy(sample.input[i])
+			end
 		end
+	else
+		if sample.input == nil then
+			if not self.opts.disableCUDA then
+				if self.opts.numGPUs > 1 then
+					self.input = cutorch.createCudaHostTensor()
+				else
+					self.input = torch.CudaTensor()
+				end
+			else
+				self.input = torch.Tensor()
+			end
 
-		self.input:resize(sample.input:size()):copy(sample.input)
+			self.input:resize(sample.input:size()):copy(sample.input)
+		else
+			self.input:copy(sample.input)
+		end
 	end
 	
 	if type(sample.target) == 'table' then
-		self.target = {}
-		for i,e in ipairs(sample.target) do
-			if not self.opts.disableCUDA then
-				if self.opts.numGPUs > 1 then
-					self.target[i] = torch.CudaTensor()
+		if self.target == nil then
+			self.target = {}
+			for i,e in ipairs(sample.target) do
+				if not self.opts.disableCUDA then
+					if self.opts.numGPUs > 1 then
+						self.target[i] = torch.CudaTensor()
+					else
+						self.target[i] = torch.CudaTensor()
+					end
 				else
-					self.target[i] = torch.CudaTensor()
+					self.target[i] = torch.Tensor()
 				end
-			else
-				self.target[i] = torch.Tensor()
-			end
 
-			self.target[i]:resize(sample.target[i]:size()):copy(sample.target[i])
-		end
-	else
-		if not self.opts.disableCUDA then
-			if self.opts.numGPUs > 1 then
-				self.target = torch.CudaTensor()
-			else
-				self.target = torch.CudaTensor()
+				self.target[i]:resize(sample.target[i]:size()):copy(sample.target[i])
 			end
 		else
-			self.target = torch.Tensor()
+			for i,e in ipairs(sample.target) do
+				self.target[i]:copy(sample.target[i])
+			end
 		end
+	else
+		if sample.target == nil then
+			if not self.opts.disableCUDA then
+				if self.opts.numGPUs > 1 then
+					self.target = torch.CudaTensor()
+				else
+					self.target = torch.CudaTensor()
+				end
+			else
+				self.target = torch.Tensor()
+			end
 
-		self.target:resize(sample.target:size()):copy(sample.target)
+			self.target:resize(sample.target:size()):copy(sample.target)
+		else
+			self.target:copy(sample.target)
+		end
 	end
 end
 

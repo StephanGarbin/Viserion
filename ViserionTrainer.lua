@@ -375,7 +375,7 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 	end
 
 	if type(sample.input) == 'table' then
-		if sample.input == nil then
+		if self.input == nil then
 			self.input = {}
 			for i,e in ipairs(sample.input) do
 				if not self.opts.disableCUDA then
@@ -396,7 +396,7 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 			end
 		end
 	else
-		if sample.input == nil then
+		if self.input == nil then
 			if not self.opts.disableCUDA then
 				if self.opts.numGPUs > 1 then
 					self.input = cutorch.createCudaHostTensor()
@@ -435,7 +435,7 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 			end
 		end
 	else
-		if sample.target == nil then
+		if self.target == nil then
 			if not self.opts.disableCUDA then
 				if self.opts.numGPUs > 1 then
 					self.target = torch.CudaTensor()

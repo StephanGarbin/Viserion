@@ -16,6 +16,9 @@ function ViserionTrainer:__init(model, criterion, optimOptimiser, optimOptions, 
 end
 
 function ViserionTrainer:train(epoch, dataloader)
+
+	dataloader.opts.currentEpoch = epoch
+	
 	--Scale learning rate if required
 	if self.opts.debug then
 		print('DEBUG: Calling defineCustomLearningRate()')
@@ -211,6 +214,9 @@ function ViserionTrainer:train(epoch, dataloader)
 end
 
 function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
+	
+	dataloader.opts.currentEpoch = epoch
+
 	--Time what we do
 	local modelTimer = torch.Timer()
 	local dataTimer = torch.Timer()

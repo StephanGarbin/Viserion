@@ -112,8 +112,8 @@ function ViserionDataLoader:run()
 					end
 
 					local sample_ = {}
-					sample_.input = _G.x:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize))
-					sample_.target = _G.y:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize))
+					sample_.input = _G.x:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize), batchNum, _G.opts.currentEpoch)
+					sample_.target = _G.y:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize), batchNum, _G.opts.currentEpoch)
 					
 					return batchNum, sample_
 				end,
@@ -222,8 +222,8 @@ function ViserionDataLoader:runNoShuffle()
 						print('DEBUG: Getting Data, calling getNarrowChunk() on your dataloader')
 					end
 					local sample_ = {}
-					sample_.input = _G.x:getNarrowChunk(1, 1 + batchSize * batchNum, bSize)
-					sample_.target = _G.y:getNarrowChunk(1, 1 + batchSize * batchNum, bSize)
+					sample_.input = _G.x:getNarrowChunk(1, 1 + batchSize * batchNum, bSize, batchNum, _G.opts.currentEpoch)
+					sample_.target = _G.y:getNarrowChunk(1, 1 + batchSize * batchNum, bSize, batchNum, _G.opts.currentEpoch)
 					
 					return batchNum, sample_
 				end,

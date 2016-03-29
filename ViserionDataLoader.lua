@@ -155,6 +155,8 @@ function ViserionDataLoader:run()
 			pool:synchronize()
 		end
 
+		createJobs()
+
 		return currentBatch, sample
 	end
 

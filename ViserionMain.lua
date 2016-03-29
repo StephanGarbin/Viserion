@@ -56,7 +56,7 @@ if not opts.disableCUDA then
 		print('Using GPUs: ', opts.gpuIDXs)
 		print('GPU Host: ', opts.gpuIDXs[1])
 		--enable flattenParams and NCLL,... splitting the minibatch!
-		model = nn.DataParallelTable(1, false, false):add(model, opts.gpuIDXs)
+		model = nn.DataParallelTable(1, true, true):add(model, opts.gpuIDXs)
 		--potentially disable ncll
 		--enable asyncronous kernel launches
 		local options = opts

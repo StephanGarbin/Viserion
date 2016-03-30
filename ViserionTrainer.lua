@@ -18,7 +18,7 @@ end
 function ViserionTrainer:train(epoch, dataloader)
 
 	dataloader.opts.currentEpoch = epoch
-	
+
 	--Scale learning rate if required
 	if self.opts.debug then
 		print('DEBUG: Calling defineCustomLearningRate()')
@@ -398,7 +398,7 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 			end
 		else
 			for i,e in ipairs(sample.input) do
-				self.input[i]:copy(sample.input[i])
+				self.input[i]:resize(sample.input[i]:size()):copy(sample.input[i])
 			end
 		end
 	else
@@ -415,7 +415,7 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 
 			self.input:resize(sample.input:size()):copy(sample.input)
 		else
-			self.input:copy(sample.input)
+			self.input:resize(sample.input:size()):copy(sample.input)
 		end
 	end
 	
@@ -437,7 +437,7 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 			end
 		else
 			for i,e in ipairs(sample.target) do
-				self.target[i]:copy(sample.target[i])
+				self.target[i]:resize(sample.target[i]:size()):copy(sample.target[i])
 			end
 		end
 	else
@@ -454,7 +454,7 @@ function ViserionTrainer:cudaDeviceCopy(sample)
 
 			self.target:resize(sample.target:size()):copy(sample.target)
 		else
-			self.target:copy(sample.target)
+			self.target:resize(sample.target:size()):copy(sample.target)
 		end
 	end
 end

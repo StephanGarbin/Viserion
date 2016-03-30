@@ -264,7 +264,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
 		if self.testOutput == nil and saveTestOutput then
 			if self.opts.debug then
-				print('DEBUG: Creating table to hold full size output of your model')
+				print('DEBUG: Creating data structure to hold full size output of your model')
 			end
 			if type(self.model.output) == 'table' then
 				self.testOutput = {}
@@ -323,19 +323,19 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
      	--Save data if required
      	if saveTestOutput then
      		if self.opts.debug then
-				print('DEBUG: Saving model output ' .. tostring(i))
+				print('DEBUG: Saving model output of batch ' .. tostring(n))
 			end
      		if type(self.model.output) == 'table' then
      			for i, e in ipairs(self.model.output) do
      				local tmp = self.model.output[i]:float()
-		     		for i = 1, (#sample.target)[1] do
-		     			self.testOutput[i][(n - 1) * self.opts.batchSize + i] = tmp[i]
+		     		for b = 1, (#(self.model.output[i]))[1] do
+		     			self.testOutput[i][(n - 1) * self.opts.batchSize + b] = tmp[b]
 		     		end
      			end
      		else
-	     		local tmp = self.model.output:float()
-	     		for i = 1, (#sample.target)[1] do
-	     			self.testOutput[(n - 1) * self.opts.batchSize + i] = tmp[i]
+     			local tmp = self.model.output:float()
+	     		for b = 1, (#self.model.output)[1] do
+	     			self.testOutput[(n - 1) * self.opts.batchSize + b] = tmp[b]
 	     		end
      		end
      	end

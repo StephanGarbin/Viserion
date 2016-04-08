@@ -169,8 +169,17 @@ function ViserionTrainer:train(epoch, dataloader)
 
 			if self.opts.debug then
 				print('DEBUG: Backward pass model')
-				print('DEBUG: Your target is:', modelTarget)
-				print('DEBUG: Your model forward output was:', self.model.output)
+				if type(modelTarget) == 'table' then
+					print('DEBUG: Your target is:', modelTarget)
+				else
+					print('DEBUG: Your target is:', modelTarget:size())
+				end
+
+				if type(self.model.output) == 'table' then
+					print('DEBUG: Your model forward output was:', self.model.output)
+				else
+					print('DEBUG: Your model forward output was:', self.model.output:size())
+				end
 			end
 
 			self.model:backward(self.input, modelTarget)

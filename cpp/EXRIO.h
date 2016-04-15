@@ -25,12 +25,14 @@ namespace viserion
 		//READING----------------------------------------
 		bool readFloatToExistingPtr(float* data,
 			int &width, int &height, int& numChannels,
+			std::vector<std::string>& sortedChannelNames,
 			Imath::Box2i& dataWindow,
 			Imath::Box2i& displayWindow,
 			int multiPartIdx = -1);
 
 		bool readFloatToNewPtr(float** data,
 			int &width, int &height, int& numChannels,
+			std::vector<std::string>& sortedChannelNames,
 			Imath::Box2i& dataWindow,
 			Imath::Box2i& displayWindow,
 			int multiPartIdx = -1);

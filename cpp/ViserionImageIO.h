@@ -24,7 +24,7 @@ private:
 bool createDataSetCache(const std::string& datasetName, const std::string& directory,
 	const std::string& cacheDirectory, bool recursive, bool normalise, bool whiten);
 
-void loadPNG(const std::string& fileName, std::vector<float>& pixels);
+void loadPNG(const std::string& fileName, std::vector<float>& pixels, int& width, int& height);
 
 
 extern "C" ViserionImageIO* createIOInstance(int val)

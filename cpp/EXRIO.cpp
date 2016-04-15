@@ -120,10 +120,12 @@ namespace viserion
 
 	bool EXRIO::readFloatToExistingPtr(float* data,
 		int &width, int &height, int& numChannels,
+		std::vector<std::string>& sortedChannelNames,
 		Imath::Box2i& dataWindow,
 		Imath::Box2i& displayWindow,
 		int multiPartIdx)
 	{
+		sortedChannelNames.clear();
 		try
 		{
  			displayWindow = m_inputFile->header().displayWindow();
@@ -144,7 +146,6 @@ namespace viserion
 
 			numChannels = 0;
 			std::vector<std::string> channelNames;
-			std::vector<std::string> sortedChannelNames;
 			for (Imf::ChannelList::ConstIterator i = channels.begin(); i != channels.end(); ++i)
 			{
 				channelNames.push_back(std::string(i.name()));
@@ -229,6 +230,7 @@ namespace viserion
 							0.0f));
 
 					++currentChannel;
+					sortedChannelNames.push_back(i.name());
 				}
 			}
 
@@ -247,10 +249,12 @@ namespace viserion
 
 	bool EXRIO::readFloatToNewPtr(float** data,
 		int &width, int &height, int& numChannels,
+		std::vector<std::string>& sortedChannelNames,
 		Imath::Box2i& dataWindow,
 		Imath::Box2i& displayWindow,
 		int multiPartIdx)
 	{
+		sortedChannelNames.clear();
 		try
 		{
  			displayWindow = m_inputFile->header().displayWindow();
@@ -271,7 +275,6 @@ namespace viserion
 
 			numChannels = 0;
 			std::vector<std::string> channelNames;
-			std::vector<std::string> sortedChannelNames;
 			for (Imf::ChannelList::ConstIterator i = channels.begin(); i != channels.end(); ++i)
 			{
 				channelNames.push_back(std::string(i.name()));
@@ -359,6 +362,7 @@ namespace viserion
 							0.0f));
 
 					++currentChannel;
+					sortedChannelNames.push_back(i.name());
 				}
 			}
 
@@ -373,9 +377,6 @@ namespace viserion
 
 		return true;
 	}
-
-
-
 
 
 	bool readFloatEXR(const std::string& fileName,

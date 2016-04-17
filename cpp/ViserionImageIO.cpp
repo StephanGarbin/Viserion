@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <algorithm>
+#include <functional>
 #include <sstream>
 #include <boost/filesystem.hpp>
 
@@ -229,7 +230,93 @@ bool createDataSetCache(const std::string& datasetName, const std::string& direc
 
 		ss.clear();
 
-		tbb::task_scheduler_init init(1);
+		std::vector<float> mean(width * height * numChannels, 0.0f);
+		std::vector<float> stdD(width * height * numChannels, 0.0f);
+		if(whiten)
+		{
+			std::vector<float> mem(width * height * numChannels);
+			std::string currentPath;
+
+			std::cout << "Calculating Mean" << std::endl;
+			//A. Calculate Mean
+			for(size_t i = 0; i < imagePaths.size(); ++i)
+			{
+				currentPath = imagePaths[i].string();
+
+				Imath::Box2i tempDataWindow;
+				Imath::Box2i tempDisplayWindow;
+				std::vector<std::string> tempChannelNames;
+				int tempNumRows;
+				int tempNumCols;
+				int tempNumChannels;
+
+				if(imagePaths[i].extension() == ".png")
+				{
+					loadPNG(currentPath, mem, tempNumRows, tempNumCols);
+				}
+				else
+				{
+					viserion::EXRIO ioInstance(currentPath);
+
+					bool status = ioInstance.readFloatToExistingPtr(&mem[0],
+						tempNumRows, tempNumCols, tempNumChannels,
+						tempChannelNames,
+						tempDataWindow,
+						tempDisplayWindow);
+				}
+
+				std::transform(mem.begin(), mem.end(), mean.begin(), mean.begin(), std::plus<float>());
+			}
+
+			for(size_t i = 0; i < mean.size(); ++i)
+			{
+				mean[i] /= (float)imagePaths.size();
+			}
+
+			std::cout << "Calculating Std" << std::endl;
+
+			//B. Calculate Std
+			for(size_t i = 0; i < imagePaths.size(); ++i)
+			{
+				currentPath = imagePaths[i].string();
+
+				Imath::Box2i tempDataWindow;
+				Imath::Box2i tempDisplayWindow;
+				std::vector<std::string> tempChannelNames;
+				int tempNumRows;
+				int tempNumCols;
+				int tempNumChannels;
+
+				if(imagePaths[i].extension() == ".png")
+				{
+					loadPNG(currentPath, mem, tempNumRows, tempNumCols);
+				}
+				else
+				{
+					viserion::EXRIO ioInstance(currentPath);
+
+					bool status = ioInstance.readFloatToExistingPtr(&mem[0],
+						tempNumRows, tempNumCols, tempNumChannels,
+						tempChannelNames,
+						tempDataWindow,
+						tempDisplayWindow);
+				}
+
+				for(size_t i = 0; i < mean.size(); ++i)
+				{
+					stdD[i] += std::pow(mem[i] - mean[i], 2);
+				}
+			}
+			
+			for(size_t i = 0; i < mean.size(); ++i)
+			{
+				stdD[i] =std::sqrt(stdD[i] / (float)imagePaths.size());
+			}
+
+			mem.clear();
+		}
+
+		tbb::task_scheduler_init init(2);
 
 		//4. Iterate over all files in path and add to cache
 		tbb::parallel_for(tbb::blocked_range<size_t>(0, imagePaths.size()),
@@ -263,14 +350,28 @@ bool createDataSetCache(const std::string& datasetName, const std::string& direc
 						tempDisplayWindow);
 				}
 
-				if(normalise)
+				if(whiten)
+				{
+					for(size_t i = 0; i < mem.size(); ++i)
+					{
+						if(stdD[i] != 0.0f)
+						{
+							mem[i] = (mem[i] - mean[i]) / stdD[i];
+						}
+					}
+				}
+				else if(normalise)
 				{
 					viserion::normaliseVector<>(&mem[0], mem.size());
 				}
 
 				archive.writeFloatPart(&mem[0], i);	
 			}
+			mem.clear();
 		});
+
+		mean.clear();
+		stdD.clear();
 
 
 		//5. Close cache & return

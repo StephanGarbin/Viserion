@@ -12,6 +12,20 @@ require 'Viserion/ViserionPlotting'
 
 ViserionTrainer = require 'Viserion/ViserionTrainer'
 
+function printDebug(m)
+	if opts.debug then
+		print('DEBUG: ', m)
+	end
+end
+
+function printWarning(m)
+	print('WARNING: ', m)
+end
+
+function printError(m)
+	print('ERROR: ', m)
+end
+
 
 torch.setdefaulttensortype('torch.FloatTensor')
 

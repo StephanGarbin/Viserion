@@ -257,44 +257,4 @@ function ViserionDataLoader:runNoShuffle()
 	return loop
 end
 
-function ViserionDataLoader:augmentWithHFlips(perc)
-	local perm = torch.randperm(self.__size)
-	numAdditions = self.__size * (perc / 100)
-	
-	local newDataX = torch.Tensor(self.__size + numAdditions, (#self.Xs.data)[2], (#self.Xs.data)[    3], (#self.Xs.data)[4])
-	
-	local newDataY = torch.Tensor(self.__size + numAdditions, (#self.Ys.data)[2])
-
-	for i=1,self.__size do
-		newDataX[i] = self.Xs.data[i]
-		newDataY[i] = self.Ys.data[i]
-	end
-	
-	width = (#self.Xs.data)[2]
-	height = (#self.Xs.data)[3]
-	
-	tmp = torch.Tensor(1, (#self.Ys.data)[2]):zero()
-	tmp[1][1] = 1
-	tmp[1][3] = 1
-	tmp[1][5] = 1
-	tmp[1][7] = 1
-	
-	for i=1,numAdditions do
-		newDataX[self.__size + i] = image.hflip(self.Xs.data[perm[i]])
-		newDataY[self.__size + i] = (tmp -  self.Ys.data[perm[i]]):abs()
-	end
-
-	self.Xs.data = newDataX
-	collectgarbage()
-	self.Ys.data = newDataY
-	collectgarbage()
-	self.__size = self.__size + numAdditions
-	self.Xs.__size = self.__size
-	self.Ys.__size = self.__size
-	print('Added ' .. tostring(numAdditions) .. ' random hflips to data')
-	print('New training set size is: ' .. tostring(self.__size))
-end
-
-
-
 return X.ViserionDataLoader

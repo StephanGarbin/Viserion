@@ -221,7 +221,6 @@ if(opts.doTraining) then
 	end
 
 	saveState(opts.numEpochs, lossTrain, lossTest, trainer.testOutput)
-	print(lossAll)
 else
 	print('Just testing ' .. tostring(opts.startEpoch) .. '... ')
 	-- Test

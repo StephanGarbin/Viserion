@@ -26,6 +26,9 @@ function printError(m)
 	print('ERROR: ', m)
 end
 
+if opts.batchSize < 2 then
+	printWarning("Batch sizes of 1 are highly discouraged due to internal indexing!")
+end
 
 torch.setdefaulttensortype('torch.FloatTensor')
 

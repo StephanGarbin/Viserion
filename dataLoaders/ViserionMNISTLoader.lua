@@ -35,7 +35,7 @@ function ViserionMNISTLoader:getNarrowChunkNonContiguous(dim, idxList)
 	if self.isLabels then
 		chunk = torch.Tensor(idxList:size()[1])
 		for i = 1, idxList:size()[1] do
-			chunk[i] = self.data[idxList[i]]
+			chunk[i] = self.data[idxList[i]] + 1
 		end
 		return chunk
 	else

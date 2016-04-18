@@ -45,9 +45,9 @@ function ViserionDataLoader:run()
 		print('DEBUG: Creating Thread Pool with ' .. tostring(self.numThreads) .. ' threads')
 	end
 
-	local lViserionBinaryLoader = require('Viserion/dataLoaders/ViserionBinaryLoader')
+	--local lViserionBinaryLoader = require('Viserion/dataLoaders/ViserionBinaryLoader')
 	local lViserionMNISTLoader = require('Viserion/dataLoaders/ViserionMNISTLoader')
-	local lViserionStereoHDF5Loader = require('Viserion/dataLoaders/ViserionStereoHDF5Loader')
+	--local lViserionStereoHDF5Loader = require('Viserion/dataLoaders/ViserionStereoHDF5Loader')
 	--Create the parallel thread pool
 	local pool = threads.Threads(self.numThreads,
 		function(idx)
@@ -56,9 +56,10 @@ function ViserionDataLoader:run()
 			if options.debug then
 				print('DEBUG: Loading the require file on ', idx)
 			end
-			ViserionBinaryLoader = lViserionBinaryLoader
-			--require('Viserion/dataLoaders/ViserionMNISTLoader')
-			ViserionStereoHDF5Loader = lViserionStereoHDF5Loader
+			--ViserionBinaryLoader = lViserionBinaryLoader
+			require('Viserion/dataLoaders/ViserionMNISTLoader')
+			--lViserionMNISTLoader = lViserionMNISTLoader
+			--ViserionStereoHDF5Loader = lViserionStereoHDF5Loader
 
 			--Load custom dataloaders if necessary
 			if options.customDataLoaderFile ~= '' then

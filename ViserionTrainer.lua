@@ -47,10 +47,8 @@ function ViserionTrainer:train(epoch, dataloader)
 	local avgDataTime = 0
 
 	local t1 = nil
-	local t5 = nil
 	if opts.printCLErrors then
 		t1 = torch.Tensor(numBatches):fill(0)
-		t5 = torch.Tensor(numBatches):fill(0)
 	end
 
 	--Switch Model to training
@@ -63,6 +61,7 @@ function ViserionTrainer:train(epoch, dataloader)
 
 	criteriaForwardOutputs = {}
 	ProgressBarStep = 1
+
 	--Process all batches
 	for n, sample in dataloader:run() do
 		
@@ -117,11 +116,8 @@ function ViserionTrainer:train(epoch, dataloader)
 			loss[n] = local_loss
 
 			if opts.printCLErrors then
-				lt1, lt5 = self:computeClassificationErrors(self.model.output, sample.target)
+				lt1 = self:computeClassificationErrors(self.model.output, sample.target)
 				t1[n] = lt1
-				if lt5 ~= nil then
-					t5[n] = lt5
-				end
 			end
 		else
 			criteriaForwardOutput = {}
@@ -208,7 +204,7 @@ function ViserionTrainer:train(epoch, dataloader)
 		print('Loss = ' .. tostring(loss:mean()))
 
 		if opts.printCLErrors then
-			print('Top1Error = ' .. tostring(t1:mean()) .. ' Top5Error = ' .. tostring(t5:mean()))
+			print('Top1Error = ' .. tostring(t1:mean()))
 		end
 	else
 		defineCriteriaPrintOut(epoch, true, criteriaForwardOutputs)
@@ -235,10 +231,8 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	--Store progression of loss, time to load data & to execute
 	local loss = torch.Tensor(numBatches):fill(0)
 	local t1 = nil
-	local t5 = nil
 	if opts.printCLErrors then
 		t1 = torch.Tensor(numBatches):fill(0)
-		t5 = torch.Tensor(numBatches):fill(0)
 	end
 
 	local avgModelTime = 0
@@ -310,11 +304,8 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 			loss[n] = local_loss
 
 			if opts.printCLErrors then
-				lt1, lt5 = self:computeClassificationErrors(self.model.output, sample.target)
+				lt1 = self:computeClassificationErrors(self.model.output, sample.target)
 				t1[n] = lt1
-				if lt5 ~= nil then
-					t5[n] = lt5
-				end
 			end
 		else
 			criteriaForwardOutput = {}
@@ -365,7 +356,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 		print('Loss = ' .. tostring(loss:mean()))
 
 		if opts.printCLErrors then
-			print('Top1Error = ' .. tostring(t1:mean()) .. ' Top5Error = ' .. tostring(t5:mean()))
+			print('Top1Error = ' .. tostring(t1:mean()))
 		end
 	else
 		defineCriteriaPrintOut(epoch, false, criteriaForwardOutputs)
@@ -479,13 +470,7 @@ function ViserionTrainer:computeClassificationErrors(modelForward, target)
 
 	top1Error = 1 - torch.sum(tmp) / modelForward:size()[1]
 
-	if modelForward:size()[2] >= 5 then
-		local tmp2 = torch.clamp((idxs[{{}, {1, 5}}]:float() - torch.expand(target:float(), target:size()[1], 5)):abs(),0,1)
-
-		top5Error = 1 - torch.sum(tmp2) / modelForward:size()[1]
-	end
-
-	return top1Error, top5Error
+	return top1Error
 end
 
 return X.ViserionTrainer

@@ -201,7 +201,7 @@ if(opts.doTraining) then
 				if opts.debug then
 					print('DEBUG: calling saveState()')
 				end
-				saveState(epoch, loss, trainer.testOutput)
+				saveState(epoch, lossTrain, lossTest, trainer.testOutput)
 			end
 		end
 

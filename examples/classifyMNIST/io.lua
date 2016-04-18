@@ -24,6 +24,6 @@ printDebug("Constructing the ViserionDataLoader Instances...")
 trainDataLoader = superDataLoader(opts, trainXLoader, trainYLoader)
 testDataLoader = superDataLoader(opts, testXLoader, testYLoader)
 
-function saveState(epoch, loss, testOutput)
+function saveState(epoch, lossTrain, lossTest, testOutput)
 		print('Save State Not Implemented...')
 end

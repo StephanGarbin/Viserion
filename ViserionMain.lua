@@ -92,6 +92,7 @@ if not opts.disableCUDA then
 				local cunn = require 'cunn'
 				local cutorch = require 'cutorch'
 				local torch = require 'torch'
+				local nngraph = require 'nngraph'
 				cudnn.benchmark = true
 				cudnn.fastest = true
 				print('Using cudnn version: ', cudnn.version)

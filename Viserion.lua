@@ -23,6 +23,7 @@ cmd:option('-customDataLoaderFile', '', 'Specify this if you are using your own 
 cmd:option('-modelName', 'myModel', 'Specify model name. This is used when saving a gModule grap for example')
 cmd:option('-enablePlots', false, 'Plots loss to a file')
 cmd:option('-printCLErrors', false, 'Switches plots to doClassification')
+cmd:option('-wildcard', '', 'Pass a custom string')
 opts = cmd:parse(arg)
 
 print(opts)

@@ -2,7 +2,11 @@ require 'torch'
 require 'nn'
 require 'optim'
 require 'cunn'
-require 'cudnn'
+
+if not opts.disableCUDNN then 
+	require 'cudnn'
+end
+
 require 'cutorch'
 require 'nngraph'
 
@@ -32,11 +36,13 @@ end
 
 torch.setdefaulttensortype('torch.FloatTensor')
 
-cudnn.benchmark = true
-cudnn.fastest = true
-print('Using cudnn version: ', cudnn.version)
-if opts.cudnnVerbose then
-	cudnn.verbose = true
+if not opts.disableCUDNN then 
+	cudnn.benchmark = true
+	cudnn.fastest = true
+	print('Using cudnn version: ', cudnn.version)
+	if opts.cudnnVerbose then
+		cudnn.verbose = true
+	end
 end
 
 --DATA HANDLING

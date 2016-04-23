@@ -107,7 +107,7 @@ void loadPNG(const std::string& fileName, std::vector<float>& pixels, int& width
 }
 
 bool createDataSetCache(const std::string& datasetName, const std::string& directory,
-	const std::string& cacheDirectory, bool recursive, bool normalise, bool whiten)
+	const std::string& cacheDirectory, const std::string& compression, bool recursive, bool normalise, bool whiten)
 {
 	boost::filesystem::path filePath(directory);
 	boost::filesystem::path cachePath(cacheDirectory);

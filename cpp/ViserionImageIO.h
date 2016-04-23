@@ -22,7 +22,7 @@ private:
 };
 
 bool createDataSetCache(const std::string& datasetName, const std::string& directory,
-	const std::string& cacheDirectory, bool recursive, bool normalise, bool whiten);
+	const std::string& cacheDirectory, const std::string& compression, bool recursive, bool normalise, bool whiten);
 
 void loadPNG(const std::string& fileName, std::vector<float>& pixels, int& width, int& height);
 
@@ -47,9 +47,9 @@ extern "C" bool reset(ViserionImageIO* ptr)
 	return ptr->reset();
 }
 
-extern "C" bool createDataSetCache(const char* datasetName, const char* directory, const char* cacheDirectory, bool recursive, bool normalise, bool whiten)
+extern "C" bool createDataSetCache(const char* datasetName, const char* directory, const char* cacheDirectory, const* char compression, bool recursive, bool normalise, bool whiten)
 {
-	return createDataSetCache(std::string(datasetName), std::string(directory), std::string(cacheDirectory), recursive, normalise, whiten);
+	return createDataSetCache(std::string(datasetName), std::string(directory), std::string(cacheDirectory), std::string(compression), recursive, normalise, whiten);
 }
 
 extern "C" bool readEXR(ViserionImageIO* ptr, const char *fileName, THFloatTensor* targetTensor)

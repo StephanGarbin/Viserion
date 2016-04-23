@@ -16,6 +16,7 @@ namespace viserion
 		const std::vector<std::string>& channelNames,
 		Imath::Box2i& dataWindow,
 		Imath::Box2i& displayWindow,
+		Imf::Compression compression,
 		int numParts)
 	{
 		try
@@ -31,6 +32,7 @@ namespace viserion
 				}
 				headers[i].setName(std::to_string(i));
 				headers[i].setType(Imf::SCANLINEIMAGE);
+				headers[i].compression() = compression;
 			}
 
 

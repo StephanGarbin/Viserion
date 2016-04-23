@@ -87,9 +87,9 @@ if not opts.disableCUDA then
 		local cunnCpy = cunn
 		local cudnnCpy = cudnn
 		local cutorchCpy = cutorch
-		if opts.multiThreadGPUCopies then
+		if not opts.disableThreadedGPUCopies then
 			print('Spawning ' .. tostring(opts.numGPUs) .. ' Threads for CUDA MemCpy operations...')
-			print('WARNING: If this causes FATAL_THREAD_PANIC, disable -multiThreadGPUCopies')
+			print('WARNING: If this causes FATAL_THREAD_PANIC, use -disableThreadedGPUCopies')
 
 			model:threads(function(idx)
 				print('Spawning Thread', idx)	

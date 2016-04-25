@@ -63,8 +63,7 @@ function ViserionTrainer:train(epoch, dataloader)
 	ProgressBarStep = 1
 
 	--Process all batches
-	for n, sample in dataloader:run() do
-		
+	for n, sample in dataloader:run() do	
 		avgDataTime = avgDataTime + dataTimer:time().real
 
 		if not self.opts.debug then
@@ -197,6 +196,16 @@ function ViserionTrainer:train(epoch, dataloader)
 		modelTimer:reset()
 		dataTimer:reset()
 		ProgressBarStep = ProgressBarStep + 1
+
+		if processModelAfterBatch ~= nil then
+			printDebug([[Calling 'processModelAfterBatch']])
+			processModelAfterBatch(true, n)
+		end
+	end
+
+	if processModelAfterEpoch ~= nil then
+			printDebug([[Calling 'processModelAfterEpoch']])
+			processModelAfterEpoch(true)
 	end
 
 	print('\n')
@@ -348,6 +357,16 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 		dataTimer:reset()
 
 		ProgressBarStep = ProgressBarStep + 1
+
+		if processModelAfterBatch ~= nil then
+			printDebug([[Calling 'processModelAfterBatch']])
+			processModelAfterBatch(false, n)
+		end
+	end
+
+	if processModelAfterEpoch ~= nil then
+			printDebug([[Calling 'processModelAfterEpoch']])
+			processModelAfterEpoch(false)
 	end
 
 	print('\n')

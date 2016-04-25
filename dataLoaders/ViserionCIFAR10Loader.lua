@@ -7,7 +7,7 @@ function ViserionCIFAR10Loader:__init(directory, isLabels, isTest)
 	self.isTest = isTest
 
 	--find files in directories
-	print('Finding CIFAR binary files in Directory...')
+	--print('Finding CIFAR binary files in Directory...')
 
 	self.files = {}
 
@@ -24,10 +24,10 @@ function ViserionCIFAR10Loader:__init(directory, isLabels, isTest)
 	if count ~= 6 then
 		printError("CIFAR binary file missing!")
 	end
-	print(self.files)
+	
 	if self.isTest then
 		for i=1, 5, 1 do 
-			table.remove(self.files, i)
+			table.remove(self.files, 1)
 		end
 		self.numFiles = 1
 	else
@@ -35,24 +35,15 @@ function ViserionCIFAR10Loader:__init(directory, isLabels, isTest)
 		self.numFiles = 5
 	end
 
-	print(self.files)
-	print(self.isTest)
-	print(self.numFiles)
-	print(self.isLabels)
-
 	collectgarbage()
 
-
-	self.numFiles = count
 	self.__size = 0
 
 	if self.isLabels then
 		self.data = torch.FloatTensor(self.numFiles * 10000, 1)
 	else
-		self.data = torch.FloatTensor(self.numFiles * 10000, 3, 1024)
+		self.data = torch.FloatTensor(self.numFiles * 10000, 3, 32, 32)
 	end
-
-	print(self.data:size())
 
 	for i, file in pairs(self.files) do
 		local offset = (i - 1) * 10000

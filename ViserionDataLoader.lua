@@ -46,7 +46,7 @@ function ViserionDataLoader:run()
 	end
 
 	--local lViserionBinaryLoader = require('Viserion/dataLoaders/ViserionBinaryLoader')
-	local lViserionMNISTLoader = require('Viserion/dataLoaders/ViserionMNISTLoader')
+	--local lViserionMNISTLoader = require('Viserion/dataLoaders/ViserionMNISTLoader')
 	--local lViserionStereoHDF5Loader = require('Viserion/dataLoaders/ViserionStereoHDF5Loader')
 	--Create the parallel thread pool
 	local pool = threads.Threads(self.numThreads,
@@ -58,6 +58,7 @@ function ViserionDataLoader:run()
 			end
 			--ViserionBinaryLoader = lViserionBinaryLoader
 			require('Viserion/dataLoaders/ViserionMNISTLoader')
+			require('Viserion/dataLoaders/ViserionCIFAR10Loader')
 			--lViserionMNISTLoader = lViserionMNISTLoader
 			--ViserionStereoHDF5Loader = lViserionStereoHDF5Loader
 
@@ -87,7 +88,7 @@ function ViserionDataLoader:run()
 	if self.opts.debug then
 		print('DEBUG: Creating Random Permutation')
 	end
-	local perm = torch.randperm(self.__size)
+	self.perm = torch.randperm(self.__size)
 	
 	numEnqueuedBatches = 0
 	numBatches = math.ceil(self.__size / self.batchSize)

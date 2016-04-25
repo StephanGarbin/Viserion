@@ -43,6 +43,7 @@ namespace viserion
 			const std::vector<std::string>& channelNames,
 			Imath::Box2i& dataWindow,
 			Imath::Box2i& displayWindow,
+			Imf::Compression compression,
 			int numParts = 0,
 			int multiPartIdx = -1);
 

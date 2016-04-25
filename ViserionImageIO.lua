@@ -4,7 +4,7 @@ local X = {}
 
 local ViserionImageIO = torch.class('ViserionImageIO', X)
 
-function ViserionImageIO:__init(datasetName, directory, cacheDirectory, recreateCache, recursive, normalise, whiten, percentage2Use)
+function ViserionImageIO:__init(datasetName, directory, cacheDirectory, recreateCache, recursive, compression, normalise, whiten, percentage2Use)
 
 	--check if dataset file exists without needing any other libraries
 	f_temp = io.open(cacheDirectory .. "/" .. datasetName .. ".exr","r")
@@ -15,7 +15,7 @@ function ViserionImageIO:__init(datasetName, directory, cacheDirectory, recreate
 
 	if recreateCache or f_Stat == nil then
 		print('Creating cache for dataset '.. datasetName)
-		clib.createDataSetCache(datasetName, directory, cacheDirectory, recursive, normalise, whiten)
+		clib.createDataSetCache(datasetName, directory, cacheDirectory, compression, recursive, normalise, whiten)
 	else
 		print('Cache for dataset ' .. datasetName .. ' exists, no caching to be done.');
 	end

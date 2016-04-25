@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include <ImfMultiPartOutputFile.h>
+
 #include "TH/THTensor.h"
 
 class ViserionImageIO
@@ -17,6 +19,7 @@ public:
 
 	bool readEXR(const std::string& fileName, float** destination, long& numRows, long& numCols, long& numChannels);
 
+	static bool string2ImfCompression(const std::string& str, Imf::Compression& compression);
 private:
 	int m_val;
 };
@@ -47,7 +50,7 @@ extern "C" bool reset(ViserionImageIO* ptr)
 	return ptr->reset();
 }
 
-extern "C" bool createDataSetCache(const char* datasetName, const char* directory, const char* cacheDirectory, const* char compression, bool recursive, bool normalise, bool whiten)
+extern "C" bool createDataSetCache(const char* datasetName, const char* directory, const char* cacheDirectory, const char* compression, bool recursive, bool normalise, bool whiten)
 {
 	return createDataSetCache(std::string(datasetName), std::string(directory), std::string(cacheDirectory), std::string(compression), recursive, normalise, whiten);
 }

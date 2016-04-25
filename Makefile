@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS= -Wall -std=c++11
+CFLAGS= -Wall -std=c++11 -Ofast
 LDFLAGS=
 LIBS := -L/usr/local/lib -lboost_filesystem -lboost_thread -lboost_system -lIlmImf -lIlmThread -lImath -lIex -lfftw3 -ltbb
 INCLUDES := -Icpp -I/usr/local/include/OpenEXR -I/home/stephan/torch/install/include

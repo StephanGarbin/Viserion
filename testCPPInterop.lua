@@ -4,8 +4,9 @@ require 'torch'
 local ViserionImageIO = require 'ViserionImageIO'
 
 t0 = torch.Timer()
-myInstance = ViserionImageIO('db_1', '/home/stephan/testImages/testSequence/exrs', '/home/stephan/testImages/testCache', true, false, true, true, 100)
+myInstance = ViserionImageIO('db_1', '/home/stephan/testImages/testSequence/exrs/', '/home/stephan/testImages/testCache', true, false, 'ZIPS_COMPRESSION', true, true, 100)
 print(t0:time().real)
+print('Cache done...');
 
 myInstance:destroyInstance()
 

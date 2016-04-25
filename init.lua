@@ -11,7 +11,7 @@ ffi.cdef[[
 
 	bool reset(ViserionImageIO_t*);
 
-	bool createDataSetCache(const char*, const char*, const char*, bool, bool, bool);
+	bool createDataSetCache(const char*, const char*, const char*, const char*, bool, bool, bool);
 ]]
 
 clib = ffi.load('/home/stephan/luaProjects/Viserion/ViserionImageIO')

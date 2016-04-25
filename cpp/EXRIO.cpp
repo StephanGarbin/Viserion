@@ -42,6 +42,7 @@ namespace viserion
 		const std::vector<std::string>& channelNames,
 		Imath::Box2i& dataWindow,
 		Imath::Box2i& displayWindow,
+		Imf::Compression compression,
 		int numParts,
 		int multiPartIdx)
 	{
@@ -53,6 +54,8 @@ namespace viserion
 			{
 				header.channels().insert(channel.c_str(), Imf::Channel(Imf::FLOAT));
 			}
+
+			header.compression() = compression;
 
 			Imf::FrameBuffer frameBuffer;
 

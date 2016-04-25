@@ -43,6 +43,65 @@ bool ViserionImageIO::reset()
 
 }
 
+bool ViserionImageIO::string2ImfCompression(const std::string& str, Imf::Compression& compression)
+{
+	if(str == "NO_COMPRESSION")
+	{
+		compression = Imf::Compression::NO_COMPRESSION;
+		return true;
+	}
+	else if(str == "RLE_COMPRESSION")
+	{
+		compression = Imf::Compression::RLE_COMPRESSION;
+		return true;
+	}
+	else if(str == "ZIPS_COMPRESSION")
+	{
+		compression = Imf::Compression::ZIPS_COMPRESSION;
+		return true;
+	}
+	else if(str == "ZIP_COMPRESSION")
+	{
+		compression = Imf::Compression::ZIP_COMPRESSION;
+		return true;
+	}
+	else if(str == "PIZ_COMPRESSION")
+	{
+		compression = Imf::Compression::PIZ_COMPRESSION;
+		return true;
+	}
+	else if(str == "PXR24_COMPRESSION")
+	{
+		compression = Imf::Compression::PXR24_COMPRESSION;
+		return true;
+	}
+	else if(str == "B44_COMPRESSION")
+	{
+		compression = Imf::Compression::B44_COMPRESSION;
+		return true;
+	}
+	else if(str == "B44A_COMPRESSION")
+	{
+		compression = Imf::Compression::B44A_COMPRESSION;
+		return true;
+	}
+	else if(str == "DWAA_COMPRESSION")
+	{
+		compression = Imf::Compression::DWAA_COMPRESSION;
+		return true;
+	}
+	else if(str == "DWAB_COMPRESSION")
+	{
+		compression = Imf::Compression::DWAB_COMPRESSION;
+		return true;
+	}
+	else
+	{
+	compression = Imf::Compression::NO_COMPRESSION;
+	return false;
+	}
+}
+
 bool ViserionImageIO::readEXR(const std::string& fileName, float** destination, long& numRows, long& numCols, long& numChannels)
 {
 	Imath::Box2i dataWindow;
@@ -221,14 +280,13 @@ bool createDataSetCache(const std::string& datasetName, const std::string& direc
 
 		std::cout << width << ", " << height << ",  " << numChannels << std::endl;
 
-		std::stringstream ss;
-		ss << cacheDirectory << "/" << datasetName << ".exr";
+		Imf::Compression chosenCompression;
+		if(!ViserionImageIO::string2ImfCompression(compression, chosenCompression))
+		{
+			std::cout << "ERROR: Compression choice " << compression << " is invalid, using no compression." << std::endl;
+		}
 
-		viserion::EXRMultiPartWriter archive(ss.str(), channelNames, 
-			dataWindow, displayWindow,
-			imagePaths.size());
-
-		ss.clear();
+		Imf::setGlobalThreadCount(8);
 
 		std::vector<float> mean(width * height * numChannels, 0.0f);
 		std::vector<float> stdD(width * height * numChannels, 0.0f);
@@ -316,7 +374,19 @@ bool createDataSetCache(const std::string& datasetName, const std::string& direc
 			mem.clear();
 		}
 
-		tbb::task_scheduler_init init(2);
+		std::stringstream ss;
+		ss << cacheDirectory << "/" << datasetName << ".exr";
+
+		std::cout << "Writing archive..." << std::endl;
+
+		viserion::EXRMultiPartWriter archive(ss.str(), channelNames, 
+			dataWindow, displayWindow,
+			chosenCompression,
+			imagePaths.size());
+
+		ss.clear();
+
+		tbb::task_scheduler_init init(7);
 
 		//4. Iterate over all files in path and add to cache
 		tbb::parallel_for(tbb::blocked_range<size_t>(0, imagePaths.size()),
@@ -338,6 +408,8 @@ bool createDataSetCache(const std::string& datasetName, const std::string& direc
 				if(imagePaths[i].extension() == ".png")
 				{
 					loadPNG(currentPath, mem, tempNumRows, tempNumCols);
+
+
 				}
 				else
 				{
@@ -366,6 +438,20 @@ bool createDataSetCache(const std::string& datasetName, const std::string& direc
 				}
 
 				archive.writeFloatPart(&mem[0], i);	
+				/*viserion::EXRIO ioInstance(currentPath);
+
+				std::stringstream ss1;
+				ss1 << cacheDirectory << "/" << i << ".exr";
+
+				bool status = ioInstance.writeFloat(ss1.str(),
+					&mem[0],
+					channelNames,
+					dataWindow,
+					displayWindow,
+					chosenCompression);
+
+				ss1.clear();*/
+
 			}
 			mem.clear();
 		});

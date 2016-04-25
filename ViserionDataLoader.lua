@@ -88,8 +88,10 @@ function ViserionDataLoader:run()
 	if self.opts.debug then
 		print('DEBUG: Creating Random Permutation')
 	end
-	self.perm = torch.randperm(self.__size)
+	local perm = torch.randperm(self.__size)
 	
+	self.perm = perm
+
 	numEnqueuedBatches = 0
 	numBatches = math.ceil(self.__size / self.batchSize)
 

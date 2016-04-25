@@ -49,21 +49,25 @@ function ViserionCIFAR10Loader:__init(directory, isLabels, isTest)
 	if self.isLabels then
 		self.data = torch.FloatTensor(self.numFiles * 10000, 1)
 	else
-		self.data = torch.FloatTensor(self.numFiles * 10000, 1024 * 3)
+		self.data = torch.FloatTensor(self.numFiles * 10000, 3, 1024)
 	end
 
+	print(self.data:size())
+
 	for i, file in pairs(self.files) do
-		local offset = (i - 1) * 100000
+		local offset = (i - 1) * 10000
 		f = torch.DiskFile(file, 'r'):binary()
+
 		for j=1,10000,1 do
-			local label = f:readByte(1)
+			local label = torch.ByteTensor(f:readByte(1))
 			local image = torch.ByteTensor(f:readByte(1024 * 3))
 			if self.isLabels then
-				self.data[offset + j] = label
+				self.data[offset + j] = label:float()
 			else
 				self.data[offset + j] = image:float()
 			end
 		end
+		f:close()
 	end
 
 	collectgarbage()

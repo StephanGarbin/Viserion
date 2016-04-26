@@ -7,8 +7,6 @@ function ViserionCIFAR10Loader:__init(directory, isLabels, isTest)
 	self.isTest = isTest
 
 	--find files in directories
-	--print('Finding CIFAR binary files in Directory...')
-
 	self.files = {}
 
 	for file in paths.files(directory) do
@@ -69,7 +67,11 @@ function ViserionCIFAR10Loader:size()
 end
 
 function ViserionCIFAR10Loader:getNarrowChunk(dim, index, size)
-	return self.data:narrow(dim, index, size)
+	if self.isLabels then
+		return self.data:narrow(dim, index, size):squeeze() + 1
+	else
+		return self.data:narrow(dim, index, size):squeeze()
+	end
 end
 
 function ViserionCIFAR10Loader:getNarrowChunkNonContiguous(dim, idxList)

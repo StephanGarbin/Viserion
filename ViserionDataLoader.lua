@@ -45,9 +45,6 @@ function ViserionDataLoader:run()
 		print('DEBUG: Creating Thread Pool with ' .. tostring(self.numThreads) .. ' threads')
 	end
 
-	--local lViserionBinaryLoader = require('Viserion/dataLoaders/ViserionBinaryLoader')
-	--local lViserionMNISTLoader = require('Viserion/dataLoaders/ViserionMNISTLoader')
-	--local lViserionStereoHDF5Loader = require('Viserion/dataLoaders/ViserionStereoHDF5Loader')
 	--Create the parallel thread pool
 	local pool = threads.Threads(self.numThreads,
 		function(idx)
@@ -56,11 +53,10 @@ function ViserionDataLoader:run()
 			if options.debug then
 				print('DEBUG: Loading the require file on ', idx)
 			end
-			--ViserionBinaryLoader = lViserionBinaryLoader
+
 			require('Viserion/dataLoaders/ViserionMNISTLoader')
 			require('Viserion/dataLoaders/ViserionCIFAR10Loader')
-			--lViserionMNISTLoader = lViserionMNISTLoader
-			--ViserionStereoHDF5Loader = lViserionStereoHDF5Loader
+			require('Viserion/dataLoaders/ViserionSVHNLoader')
 
 			--Load custom dataloaders if necessary
 			if options.customDataLoaderFile ~= '' then
@@ -132,7 +128,7 @@ function ViserionDataLoader:run()
 	end
 
 	if self.opts.debug then
-			print('DEBUG: Creating Training Loop')
+			print('DEBUG: Creating Shuffled Loop')
 	end
 	local function loop()
 		if self.opts.debug then
@@ -172,11 +168,6 @@ function ViserionDataLoader:runNoShuffle()
 	local Xs = self.Xs
 	local Ys = self.Ys
 	local options = self.opts
-	--Compile custom dataloaders into function if required
-	local customDLs = nil
-	if options.customDataLoaderFile ~= '' then
-		customDLs = loadfile(opts.customDataLoaderFile)
-	end
 
 	--Create the parallel thread pool
 	--print('Num Threads: ', self.numThreads)
@@ -184,12 +175,16 @@ function ViserionDataLoader:runNoShuffle()
 		function(idx)
 			--We need to declare required files here,
 			--otherwise serialisation will make this fail
-			requireF = loadfile('Viserion/ViserionDataLoaderRequire.lua')
-			requireF()
+			require('Viserion/dataLoaders/ViserionMNISTLoader')
+			require('Viserion/dataLoaders/ViserionCIFAR10Loader')
+			require('Viserion/dataLoaders/ViserionSVHNLoader')
 
 			--Load custom dataloaders if necessary
-			if customDLs ~= nil then
-				customDLs()
+			if options.customDataLoaderFile ~= '' then
+				if options.debug then
+					print('DEBUG: Loading Custom DataLoader')
+				end
+				dofile(options.customDataLoaderFile)
 			end
 
 			return idx
@@ -205,9 +200,8 @@ function ViserionDataLoader:runNoShuffle()
 	numEnqueuedBatches = 0
 	numBatches = math.ceil(self.__size / self.batchSize)
 
-	local currentBatch = 0
-
 	local sample
+	local currentBatch
 
 	local function createJobs()
 		while numEnqueuedBatches < numBatches and pool:acceptsjob() do
@@ -223,9 +217,12 @@ function ViserionDataLoader:runNoShuffle()
 					end
 
 					if _G.opts.debug then
-						print('DEBUG: Getting Data, calling getNarrowChunk() on your dataloader')
+						print('DEBUG: Getting Data, calling getNarrowChunkNonContiguous() on your dataloader')
 					end
+
 					local sample_ = {}
+					--sample_.input = _G.x:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize), batchNum, _G.opts.currentEpoch)
+					--sample_.target = _G.y:getNarrowChunkNonContiguous(1, perm:narrow(1, 1 + batchSize * batchNum, bSize), batchNum, _G.opts.currentEpoch)
 					sample_.input = _G.x:getNarrowChunk(1, 1 + batchSize * batchNum, bSize, batchNum, _G.opts.currentEpoch)
 					sample_.target = _G.y:getNarrowChunk(1, 1 + batchSize * batchNum, bSize, batchNum, _G.opts.currentEpoch)
 					
@@ -241,10 +238,13 @@ function ViserionDataLoader:runNoShuffle()
 		end
 	end
 
+	printDebug('DEBUG: Creating Non-Shuffled Loop')
+
 	local function loop()
 		createJobs()
 
 		if not pool:hasjob() then
+			pool:synchronize()
         	return nil
       	end
 		pool:dojob()
@@ -254,6 +254,8 @@ function ViserionDataLoader:runNoShuffle()
 			print('ERROR: Thread Pool of DataLoader Class has encountered a critical error...')
 			pool:synchronize()
 		end
+
+		createJobs()
 
 		return currentBatch, sample
 	end

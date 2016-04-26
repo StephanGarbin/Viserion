@@ -258,7 +258,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 
 	ProgressBarStep = 1
 	--Process all batches
-	for n, sample in dataloader:run() do
+	for n, sample in dataloader:runNoShuffle() do
 
 		if not self.opts.debug then
 			xlua.progress(ProgressBarStep, numBatches)
@@ -309,7 +309,6 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 				print('DEBUG: Forward pass criterion')
 			end
 			local local_loss = self.criterion:forward(self.model.output, self.target)
-	     	
 			loss[n] = local_loss
 
 			if opts.printCLErrors then

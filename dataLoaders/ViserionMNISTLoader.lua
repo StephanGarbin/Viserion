@@ -28,7 +28,11 @@ function ViserionMNISTLoader:size()
 end
 
 function ViserionMNISTLoader:getNarrowChunk(dim, index, size)
-	return self.data:narrow(dim, index, size)
+	if self.isLabels then
+		return self.data:narrow(dim, index, size) + 1
+	else
+		return self.data:narrow(dim, index, size)
+	end
 end
 
 function ViserionMNISTLoader:getNarrowChunkNonContiguous(dim, idxList)

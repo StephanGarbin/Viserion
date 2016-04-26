@@ -87,11 +87,15 @@ function ViserionSVHNLoader:__init(directory, isLabels, isTest)
 			f:close()
 		end
 
-		
+
 		for i=1, n, 1 do
 			self.data[{i, {}, {}, {}}] = image.rgb2yuv(self.data[{i, {}, {}, {}}]:squeeze())
 		end
-		--image.save('/home/stephan/temp.png', self.data[{1, {}, {}, {}}])
+		--[[if isTest then
+			image.save('/home/stephan/tempTest.png', self.data[{torch.random(1, n), {}, {}, {}}])
+		else
+			image.save('/home/stephan/tempTrain.png', self.data[{torch.random(1, n), {}, {}, {}}])
+		end]]--
 	else
 		f = torch.DiskFile(self.files[1], 'r'):binary()
 
@@ -107,7 +111,7 @@ end
 
 function ViserionSVHNLoader:getNarrowChunk(dim, index, size)
 	if self.isLabels then
-		return self.data:narrow(dim, index, size) + 1
+		return self.data:narrow(dim, index, size)
 	else
 		return self.data:narrow(dim, index, size)
 	end
@@ -117,7 +121,7 @@ function ViserionSVHNLoader:getNarrowChunkNonContiguous(dim, idxList)
 	if self.isLabels then
 		chunk = torch.Tensor(idxList:size()[1])
 		for i = 1, idxList:size()[1] do
-			chunk[i] = self.data[idxList[i]] + 1
+			chunk[i] = self.data[idxList[i]]
 		end
 		return chunk
 	else

@@ -13,6 +13,9 @@ function ViserionTrainer:__init(model, criterion, optimOptimiser, optimOptions, 
 	self.learningRateFunc = learningRateFunc
 	self.opts = options
 	self.params, self.gradParams = model:getParameters()
+
+	self.totalNumTrainingMiniBatches = 0
+	self.totalNumTestingMiniBatches = 0
 end
 
 function ViserionTrainer:train(epoch, dataloader)
@@ -62,9 +65,23 @@ function ViserionTrainer:train(epoch, dataloader)
 	criteriaForwardOutputs = {}
 	ProgressBarStep = 1
 
+	if processBeforeEpoch ~= nil then
+		printDebug([[Calling 'processBeforeEpoch']])
+		processBeforeEpoch(true)
+	end
+
+	self.abort = nil
 	--Process all batches
 	for n, sample in dataloader:run() do	
+
+		if self.abort == false then break end
+
 		avgDataTime = avgDataTime + dataTimer:time().real
+
+		if processBeforeMinibatch ~= nil then
+			printDebug([[Calling 'processBeforeMinibatch']])
+			self.abort = processBeforeMinibatch(true, n, self.totalNumTrainingMiniBatches)
+		end
 
 		if not self.opts.debug then
 			xlua.progress(ProgressBarStep, numBatches)
@@ -197,15 +214,18 @@ function ViserionTrainer:train(epoch, dataloader)
 		dataTimer:reset()
 		ProgressBarStep = ProgressBarStep + 1
 
-		if processModelAfterBatch ~= nil then
-			printDebug([[Calling 'processModelAfterBatch']])
-			processModelAfterBatch(true, n)
+		self.totalNumTrainingMiniBatches = self.totalNumTrainingMiniBatches + 1
+
+		if processAfterMinibatch ~= nil then
+			printDebug([[Calling 'processAfterMinibatch']])
+			self.abort = processAfterMinibatch(true, n, self.totalNumTrainingMiniBatches)
 		end
 	end
 
-	if processModelAfterEpoch ~= nil then
-			printDebug([[Calling 'processModelAfterEpoch']])
-			processModelAfterEpoch(true)
+	if processAfterEpoch ~= nil then
+			print('\n')
+			printDebug([[Calling 'processAfterEpoch']])
+			processAfterEpoch(true)
 	end
 
 	print('\n')
@@ -257,16 +277,31 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 	criteriaForwardOutputs = {}
 
 	ProgressBarStep = 1
+
+	if processBeforeEpoch ~= nil then
+		printDebug([[Calling 'processBeforeEpoch']])
+		processBeforeEpoch(false)
+	end
+
+	self.abort = nil
+
 	--Process all batches
 	for n, sample in dataloader:runNoShuffle() do
+		local dataTime = dataTimer:time().real
+
+
+		if processBeforeMinibatch ~= nil then
+			printDebug([[Calling 'processBeforeMinibatch']])
+			self.abort = processBeforeMinibatch(false, n, self.totalNumTestingMiniBatches)
+		end
+
+		if self.abort == false then break end
 
 		if not self.opts.debug then
 			xlua.progress(ProgressBarStep, numBatches)
 		else
 			print('DEBUG: Processing Batch ' .. tostring(n))
 		end
-
-		local dataTime = dataTimer:time().real
 
 		--Copy input and target to the GPU
 		self:cudaDeviceCopy(sample)
@@ -356,16 +391,19 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 		dataTimer:reset()
 
 		ProgressBarStep = ProgressBarStep + 1
+		self.totalNumTestingMiniBatches = self.totalNumTestingMiniBatches + 1
 
-		if processModelAfterBatch ~= nil then
-			printDebug([[Calling 'processModelAfterBatch']])
-			processModelAfterBatch(false, n)
+		if processAfterMinibatch ~= nil then
+			printDebug([[Calling 'processAfterMinibatch']])
+			self.abort = processAfterMinibatch(false, n, self.totalNumTestingMiniBatches)
 		end
 	end
 
-	if processModelAfterEpoch ~= nil then
-			printDebug([[Calling 'processModelAfterEpoch']])
-			processModelAfterEpoch(false)
+	if processAfterEpoch ~= nil then
+
+		print('\n')
+		printDebug([[Calling 'processAfterEpoch']])
+		processAfterEpoch(false)
 	end
 
 	print('\n')

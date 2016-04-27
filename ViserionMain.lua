@@ -30,6 +30,11 @@ function printError(m)
 	print('ERROR: ', m)
 end
 
+VISERION_TERMINATED = false
+function ViserionTerminate()
+	VISERION_TERMINATED = true
+end
+
 if opts.batchSize < 2 then
 	printWarning("Batch sizes of 1 are highly discouraged due to internal indexing!")
 end
@@ -193,6 +198,11 @@ if(opts.doTraining) then
 	
 	for epoch = opts.startEpoch, opts.numEpochs do
 
+		if VISERION_TERMINATED == true then
+			printWarning('Viserion terminated by user')
+			break
+		end
+
 		-- Train
 		lossTrain = trainer:train(epoch, trainDataLoader)
 
@@ -200,6 +210,11 @@ if(opts.doTraining) then
 			print('DEBUG: Training completed, switching to testing')
 		end
 
+		if VISERION_TERMINATED == true then
+			printWarning('Viserion terminated by user')
+			break
+		end
+		
 		-- Test
 		lossTest = trainer:test(epoch, testDataLoader, opts.passFullOutput2saveState)
 

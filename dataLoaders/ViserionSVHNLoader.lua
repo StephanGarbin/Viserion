@@ -1,4 +1,6 @@
-require 'image'
+if image = nil then
+	local image = require 'image'
+end
 
 local X = {}
 

@@ -1,4 +1,4 @@
-threads = require 'threads'
+local threads = require 'threads'
 threads.Threads.serialization('threads.sharedserialize')
 
 X = {}

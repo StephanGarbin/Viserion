@@ -43,6 +43,10 @@ if opts.wildcards ~= '' then
 		for i=1,#args,2 do
 			if tonumber(args[i + 1]) ~= nil then
 				opts.wildcards[args[i]] = tonumber(args[i + 1])
+			elseif args[i + 1] == 'true' then
+				opts.wildcards[args[i]] = true
+			elseif args[i + 1] == 'false' then
+				opts.wildcards[args[i]] = false
 			else
 				opts.wildcards[args[i]] = args[i + 1]
 			end

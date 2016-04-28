@@ -7,18 +7,25 @@ model = nn.Sequential()
 -- convolutional network 
 ------------------------------------------------------------
 -- stage 1 : mean suppresion -> filter bank -> squashing -> max pooling
-model:add(nn.SpatialConvolution(1, 32, 5, 5))
-model:add(nn.Tanh())
+model:add(nn.SpatialConvolution(1, 64, 5, 5))
+model:add(nn.SpatialBatchNormalization(64))
+model:add(nn.ReLU())
 model:add(nn.SpatialMaxPooling(3, 3, 3, 3))
 -- stage 2 : mean suppresion -> filter bank -> squashing -> max pooling
-model:add(nn.SpatialConvolution(32, 64, 5, 5))
-model:add(nn.Tanh())
+model:add(nn.SpatialConvolution(64, 128, 5, 5))
+model:add(nn.SpatialBatchNormalization(128))
+model:add(nn.ReLU())
 model:add(nn.SpatialMaxPooling(2, 2, 2, 2))
--- stage 3 : standard 2-layer MLP:
-model:add(nn.Reshape(64*2*2))
-model:add(nn.Linear(64*2*2, 200))
-model:add(nn.Tanh())
-model:add(nn.Linear(200, 10))
+-- stage 3 : standard 3-layer MLP:
+local numE = 128*2*2
+model:add(nn.Reshape(numE))
+model:add(nn.Linear(numE, numE))
+model:add(nn.Dropout())
+model:add(nn.ReLU())
+model:add(nn.Linear(numE, numE))
+model:add(nn.Dropout())
+model:add(nn.ReLU())
+model:add(nn.Linear(numE, 10))
 ------------------------------------------------------------
 model:add(nn.LogSoftMax())
 

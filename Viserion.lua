@@ -24,8 +24,39 @@ cmd:option('-modelName', 'myModel', 'Specify model name. This is used when savin
 cmd:option('-enablePlots', false, 'Plots loss to a file')
 cmd:option('-printCLErrors', false, 'Switches plots to doClassification')
 cmd:option('-wildcard', '', 'Pass a custom string')
-opts = cmd:parse(arg)
+cmd:option('-wildcards', '', 'Pass a custom string resembling standard terminal arguments which gets converted to a table')
 
+--Pass cmd args
+opts = cmd:parse(arg)
+--Pass wildcards args
+if opts.wildcards ~= '' then
+	local args = {}
+	for word in opts.wildcards:gmatch("%w+") do
+		if word[1] == '-' then
+			word = string.sub(word, 1)
+		end
+		table.insert(args, word)
+	end
+
+	opts.wildcards = {}
+	if math.fmod(#args, 2) == 0 then
+		for i=1,#args,2 do
+			if tonumber(args[i + 1]) ~= nil then
+				opts.wildcards[args[i]] = tonumber(args[i + 1])
+			else
+				opts.wildcards[args[i]] = args[i + 1]
+			end
+		end
+	else
+		if #args >= 1 then
+			print('ERROR:', '-wildcards expects <key, value> pairs to construct a table!')
+		end
+	end
+else
+	opts.wildcards = {}
+end
+
+print('You supplied the following arguments:')
 print(opts)
 
 viserionAsFunc = loadfile('Viserion/ViserionMain.lua')

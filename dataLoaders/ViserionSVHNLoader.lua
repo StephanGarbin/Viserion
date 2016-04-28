@@ -1,7 +1,3 @@
-if image = nil then
-	local image = require 'image'
-end
-
 local X = {}
 
 local ViserionSVHNLoader = torch.class('ViserionSVHNLoader', X)

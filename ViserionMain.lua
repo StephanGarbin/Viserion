@@ -35,6 +35,15 @@ function ViserionTerminate()
 	VISERION_TERMINATED = true
 end
 
+function getCurrentMinibatchLoss()
+	if trainer ~= nil then
+		return trainer.getCurrentMinibatchLoss()
+	else
+		printError('Cannot call \'getCurrentMinibatchLoss\', trainer is not created yet')
+		return nil
+	end
+end
+
 if opts.batchSize < 2 then
 	printWarning("Batch sizes of 1 are highly discouraged due to internal indexing!")
 end

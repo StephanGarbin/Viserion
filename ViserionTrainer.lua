@@ -16,6 +16,7 @@ function ViserionTrainer:__init(model, criterion, optimOptimiser, optimOptions, 
 
 	self.totalNumTrainingMiniBatches = 0
 	self.totalNumTestingMiniBatches = 0
+	self.currentMiniBatchLoss = 0
 end
 
 function ViserionTrainer:train(epoch, dataloader)
@@ -130,6 +131,7 @@ function ViserionTrainer:train(epoch, dataloader)
 			local local_loss = self.criterion:forward(self.model.output, self.target)
 	     	
 			loss[n] = local_loss
+			self.currentMiniBatchLoss = local_loss
 
 			if opts.printCLErrors then
 				lt1 = self:computeClassificationErrors(self.model.output, sample.target)
@@ -345,6 +347,7 @@ function ViserionTrainer:test(epoch, dataloader, saveTestOutput)
 			end
 			local local_loss = self.criterion:forward(self.model.output, self.target)
 			loss[n] = local_loss
+			self.currentMiniBatchLoss = local_loss
 
 			if opts.printCLErrors then
 				lt1 = self:computeClassificationErrors(self.model.output, sample.target)
@@ -527,6 +530,10 @@ function ViserionTrainer:computeClassificationErrors(modelForward, target)
 	top1Error = 1 - torch.sum(tmp) / modelForward:size()[1]
 
 	return top1Error
+end
+
+function ViserionTrainer:getCurrentMinibatchLoss()
+	return self.currentMiniBatchLoss
 end
 
 return X.ViserionTrainer

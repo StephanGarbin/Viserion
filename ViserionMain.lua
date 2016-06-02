@@ -37,7 +37,7 @@ end
 
 function getCurrentMinibatchLoss()
 	if trainer ~= nil then
-		return trainer.getCurrentMinibatchLoss()
+		return trainer:getCurrentMinibatchLoss()
 	else
 		printError('Cannot call \'getCurrentMinibatchLoss\', trainer is not created yet')
 		return nil
